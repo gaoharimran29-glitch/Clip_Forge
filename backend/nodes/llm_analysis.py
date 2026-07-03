@@ -16,7 +16,7 @@ class AnalysisResponse(BaseModel):
     clips: list[ClipScore]
 
 @traceable(name="llm_analyze")
-def llm_analyze(state: GraphState) -> dict:
+async def llm_analyze(state: GraphState) -> dict:
     """LLM layer to analyze and score each transcript chunk."""
     print("LLM Analysis Started... ")
     analysis_path = Path("outputs/analysis") / f"{state['id']}.json"
@@ -104,7 +104,7 @@ def llm_analyze(state: GraphState) -> dict:
     messages = [SystemMessage(SYSTEM_PROMPT), HumanMessage(transcript_input)]
 
     try:
-        response = structured_model.invoke(messages)
+        response = await structured_model.ainvoke(messages)
 
         analysis = []
         for clip_score in response.clips:

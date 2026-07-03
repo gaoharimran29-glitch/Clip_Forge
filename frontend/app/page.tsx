@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Sparkles, Video, Download, Link2, AlertCircle, Play } from "lucide-react";
 
 interface Clip {
@@ -17,6 +17,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [clips, setClips] = useState<Clip[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
 
   const generateClips = async () => {
     if (!url) return;
@@ -43,6 +44,14 @@ export default function Home() {
     }
   };
 
+  const handleVideoPlay = (currentIndex: number) => {
+  videoRefs.current.forEach((video, index) => {
+    if (video && index !== currentIndex) {
+      video.pause();
+    }
+  });
+};
+
   return (
     <main className="min-h-screen bg-[#0B0F19] text-gray-100 selection:bg-indigo-500 selection:text-white antialiased overflow-x-hidden relative flex flex-col items-center p-6 md:p-12">
       
@@ -54,9 +63,6 @@ export default function Home() {
         <div className="flex items-center gap-2 font-bold text-xl tracking-tight bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
           <Sparkles className="w-5 h-5 text-indigo-400" />
           ClipForge.ai
-        </div>
-        <div className="text-xs bg-gray-800/40 border border-gray-700/50 text-gray-400 px-3 py-1.5 rounded-full backdrop-blur-md">
-          v1.0.0 (Beta)
         </div>
       </header>
 
@@ -145,10 +151,14 @@ export default function Home() {
                   {/* Smartphone Aspect Preview Box */}
                   <div className="aspect-[9/16] w-full max-w-[240px] mx-auto bg-gray-950 rounded-xl overflow-hidden mb-4 relative shadow-inner border border-gray-800 group-hover/card:border-gray-700 transition-colors">
                     <video
-                      src={`http://127.0.0.1:8000${clip.clips_path_normalized}`}
+                      ref={(el) => {
+                        videoRefs.current[index] = el;
+                      }}
+                      src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${clip.clips_path_normalized}`}
                       controls
+                      onPlay={() => handleVideoPlay(index)}
                       className="w-full h-full object-cover"
-                      poster="/api/placeholder/240/426" 
+                      poster="/api/placeholder/240/426"
                     />
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-100 group-hover/card:opacity-0 pointer-events-none transition-opacity">
                       <div className="bg-white/10 p-4 rounded-full backdrop-blur-md border border-white/20">
@@ -161,19 +171,19 @@ export default function Home() {
                     <h3 className="font-semibold text-base text-gray-100 line-clamp-1 mb-1 group-hover/card:text-indigo-400 transition-colors">
                     Clip #{clip.id} • Score {clip.score}/10
                     </h3>
-                    <p className="text-xs text-gray-400 line-clamp-2 leading-relaxed mb-4">
+                    <p className="text-xs text-gray-400 leading-relaxed mb-4">
                       {clip.reason || "No descriptions parsed for this segment."}
                     </p>
                   </div>
                 </div>
 
                 <a
-                  href={`http://127.0.0.1:8000${clip.clips_path_normalized}`}
+                  href={`${process.env.NEXT_PUBLIC_BACKEND_URL}${clip.clips_path_normalized}`}
                   download
                   className="flex items-center justify-center gap-2 w-full bg-gray-800 hover:bg-gray-700 text-gray-200 font-medium py-2.5 rounded-xl transition-all text-sm group/btn border border-gray-700/50"
                 >
                   <Download className="w-4 h-4 transition-transform group-hover/btn:-translate-y-0.5" />
-                  Download Assets
+                  Download Clip
                 </a>
               </div>
             ))}

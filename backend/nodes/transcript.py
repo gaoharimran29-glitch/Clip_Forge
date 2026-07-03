@@ -2,20 +2,20 @@ import json
 from pathlib import Path
 from state import GraphState
 from langsmith import traceable
-from groq import Groq
+from groq import AsyncGroq
+
+client = AsyncGroq()
 
 @traceable(name="transcribe_audio")
-def transcribe_audio(state: GraphState , MAX_CHUNK_DURATION: int = 30) -> dict:
+async def transcribe_audio(state: GraphState , MAX_CHUNK_DURATION: int = 30) -> dict:
     """Generate the transcription for audio of youtube video and save in the json file"""
     print("Transcription Started... ")
     transcript_path = Path("outputs/transcripts") / f"{state['id']}.json"
     transcript_path.parent.mkdir(parents=True, exist_ok=True)
 
-    client = Groq()
-
     try:
         with open(state['audio_path'], "rb") as file:
-            transcription = client.audio.transcriptions.create(
+            transcription = await client.audio.transcriptions.create(
             file=file,
             model="whisper-large-v3-turbo",
             response_format="verbose_json",

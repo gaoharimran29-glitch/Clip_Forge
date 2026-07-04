@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Sparkles,
   Video,
@@ -8,6 +9,7 @@ import {
   Link2,
   AlertCircle,
   Play,
+  ArrowRight,
 } from "lucide-react";
 
 interface Clip {
@@ -17,7 +19,7 @@ interface Clip {
   score: number;
   reason: string;
   filename: string;
-  download_url: string
+  download_url: string;
 }
 
 export default function Home() {
@@ -124,154 +126,271 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-[#0B0F19] text-gray-100 selection:bg-indigo-500 selection:text-white antialiased overflow-x-hidden relative flex flex-col items-center p-6 md:p-12">
-      {/* Background Decorative Glows */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[500px] pointer-events-none opacity-20 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-indigo-500 via-purple-500 to-transparent blur-3xl -z-10" />
+    <main className="relative min-h-screen w-full overflow-x-hidden bg-[#050507] text-white antialiased selection:bg-[#7C5CFC]/30 selection:text-white">
+      {/* ================= Ambient background system ================= */}
+      <div className="pointer-events-none fixed inset-0 -z-10">
+        {/* base grid */}
+        <div
+          className="absolute inset-0 opacity-[0.05]"
+          style={{
+            backgroundImage:
+              "linear-gradient(to right, #ffffff 1px, transparent 1px), linear-gradient(to bottom, #ffffff 1px, transparent 1px)",
+            backgroundSize: "64px 64px",
+          }}
+        />
+        {/* signature glow — pulses with progress while a job runs */}
+        <motion.div
+          className="absolute left-1/2 top-[-10%] h-[700px] w-[900px] -translate-x-1/2 rounded-full blur-[140px]"
+          style={{
+            background:
+              "radial-gradient(circle, rgba(124,92,252,0.35) 0%, rgba(53,231,210,0.18) 45%, transparent 70%)",
+          }}
+          animate={
+            loading
+              ? { opacity: [0.5, 0.9, 0.5], scale: [1, 1.08, 1] }
+              : { opacity: 0.55, scale: 1 }
+          }
+          transition={
+            loading
+              ? { duration: 2.2, repeat: Infinity, ease: "easeInOut" }
+              : { duration: 1 }
+          }
+        />
+        <div className="absolute bottom-[-20%] right-[-10%] h-[500px] w-[500px] rounded-full bg-[#35E7D2]/10 blur-[160px]" />
+        {/* vignette */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,#050507_78%)]" />
+      </div>
 
-      {/* Header section */}
-      <header className="w-full max-w-5xl flex justify-between items-center mb-16">
-        <div className="flex items-center gap-2 font-bold text-xl tracking-tight bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
-          <Sparkles className="w-5 h-5 text-indigo-400" />
-          ClipForge.ai
-        </div>
-      </header>
-
-      {/* Input Box Card */}
-      <section className="w-full max-w-2xl bg-gray-900/40 border border-gray-800/80 backdrop-blur-xl rounded-3xl p-8 md:p-10 shadow-2xl relative">
-        <div className="absolute -top-3 left-6 bg-gradient-to-r from-indigo-500 to-purple-500 text-[10px] font-bold tracking-widest uppercase px-3 py-1 rounded-md shadow-lg shadow-indigo-500/20">
-          AI-Powered Engine
-        </div>
-
-        <div className="text-center mb-8">
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight bg-gradient-to-b from-white to-gray-400 bg-clip-text text-transparent mb-3">
-            Turn Videos into Viral Shorts
-          </h1>
-          <p className="text-sm md:text-base text-gray-400 max-w-md mx-auto leading-relaxed">
-            Paste a YouTube link and let our pipeline extract high-retention
-            vertical clips using AI.
-          </p>
-        </div>
-
-        <div className="space-y-4">
-          <div className="relative group">
-            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-gray-500 group-focus-within:text-indigo-400 transition-colors">
-              <Link2 className="w-5 h-5" />
-            </div>
-            <input
-              type="text"
-              placeholder="Paste YouTube video URL here..."
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              disabled={loading}
-              className="w-full bg-gray-950/60 border border-gray-800 rounded-xl pl-12 pr-4 py-4 text-gray-200 placeholder-gray-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 transition-all text-sm disabled:opacity-50"
-            />
-          </div>
-
-          <button
-            onClick={generateClips}
-            disabled={loading || !url}
-            className="w-full relative group overflow-hidden bg-gradient-to-r from-indigo-600 to-purple-600 disabled:from-gray-800 disabled:to-gray-800 disabled:cursor-not-allowed text-white font-medium py-4 px-6 rounded-xl transition-all active:scale-[0.99] shadow-lg shadow-indigo-600/10 hover:shadow-indigo-600/20"
-          >
-            <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-            <span className="flex items-center justify-center gap-2">
-              {loading ? (
-                <div className="w-full flex flex-col items-center gap-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span>{step || "Processing..."}</span>
-                  </div>
-                  <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-white/80 transition-all duration-300"
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <Video className="w-5 h-5" />
-                  Forge Micro-Clips
-                </>
-              )}
+      <div className="relative mx-auto flex w-full max-w-6xl flex-col items-center px-6 pb-32 pt-10 md:px-10">
+        {/* ================= Header ================= */}
+        <motion.header
+          initial={{ opacity: 0, y: -12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="mb-20 flex w-full items-center justify-between"
+        >
+          <div className="flex items-center gap-2 text-[15px] font-semibold tracking-tight">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-[#7C5CFC] to-[#35E7D2] shadow-[0_0_20px_rgba(124,92,252,0.5)]">
+              <Sparkles className="h-4 w-4 text-black" />
             </span>
-          </button>
-        </div>
-
-        {error && (
-          <div className="mt-6 flex items-start gap-3 bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl text-sm animate-in fade-in duration-200">
-            <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-            <p>{error}</p>
+            ClipForge
+            <span className="text-white/30">.ai</span>
           </div>
-        )}
-      </section>
+        </motion.header>
 
-      {/* Results Workspace Grid */}
-      {clips && clips.length > 0 && (
-        <section className="w-full max-w-5xl mt-20 animate-in fade-in slide-in-from-bottom-6 duration-500">
-          <div className="flex items-center gap-3 mb-8 justify-between border-b border-gray-800 pb-4">
-            <div className="flex items-center gap-2">
-              <span className="bg-indigo-500/10 text-indigo-400 p-2 rounded-lg border border-indigo-500/20">
-                <Video className="w-5 h-5" />
+        {/* ================= Hero ================= */}
+        <motion.section
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: "easeOut", delay: 0.1 }}
+          className="mb-14 flex flex-col items-center text-center"
+        >
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 py-1.5 text-xs font-medium text-white/60 backdrop-blur-md">
+            <span className="bg-gradient-to-r from-[#7C5CFC] to-[#35E7D2] bg-clip-text text-transparent">
+              AI-powered
+            </span>
+            retention analysis, frame by frame
+          </div>
+
+          <h1 className="text-balance text-5xl font-black leading-[1.02] tracking-tighter sm:text-6xl md:text-7xl lg:text-8xl">
+            Turn long videos
+            <br />
+            into{" "}
+            <span className="relative inline-block">
+              <span className="bg-gradient-to-br from-white via-[#c9c2ff] to-[#7C5CFC] bg-clip-text text-transparent">
+                viral shorts
               </span>
-              <h2 className="text-xl font-bold tracking-tight text-white">
-                Generated Shorts Workspace
-              </h2>
-            </div>
-            <span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-gray-900 border border-gray-800 text-gray-400">
-              {clips.length} Clips Ready
+              <motion.span
+                className="absolute -bottom-1 left-0 h-[3px] w-full origin-left rounded-full bg-gradient-to-r from-[#7C5CFC] to-[#35E7D2]"
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{ duration: 0.9, delay: 0.5, ease: "easeOut" }}
+              />
             </span>
-          </div>
+          </h1>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {clips.map((clip, index) => (
-              <div
-                key={index}
-                className="group/card bg-gray-900/20 border border-gray-800/60 rounded-2xl p-4 flex flex-col justify-between hover:border-gray-700/80 transition-all shadow-xl hover:shadow-black/40"
+          <p className="mx-auto mt-7 max-w-xl text-balance text-base leading-relaxed text-white/45 md:text-lg">
+            Paste a link. Our pipeline finds the highest-retention moments and
+            cuts them into vertical, ready-to-post clips — automatically.
+          </p>
+        </motion.section>
+
+        {/* ================= Input card ================= */}
+        <motion.section
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: "easeOut", delay: 0.2 }}
+          className="relative w-full max-w-xl"
+        >
+          <div className="absolute -inset-px rounded-[28px] bg-gradient-to-b from-white/10 to-transparent opacity-50" />
+          <div className="relative rounded-[28px] border border-white/10 bg-white/[0.03] p-6 shadow-[0_0_60px_rgba(0,0,0,0.5)] backdrop-blur-2xl md:p-8">
+            <div className="space-y-3">
+              <div className="group relative">
+                <div className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-white/30 transition-colors group-focus-within:text-[#7C5CFC]">
+                  <Link2 className="h-4.5 w-4.5" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Paste a YouTube URL"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  disabled={loading}
+                  className="w-full rounded-2xl border border-white/10 bg-black/40 py-4 pl-11 pr-4 text-[15px] text-white placeholder-white/25 outline-none transition-all focus:border-[#7C5CFC]/50 focus:bg-black/60 focus:ring-2 focus:ring-[#7C5CFC]/20 disabled:opacity-40"
+                />
+              </div>
+
+              <motion.button
+                onClick={generateClips}
+                disabled={loading || !url}
+                whileTap={{ scale: loading || !url ? 1 : 0.98 }}
+                className="relative w-full overflow-hidden rounded-2xl bg-gradient-to-r from-[#7C5CFC] to-[#5B3FE0] py-4 font-semibold text-white shadow-[0_0_30px_rgba(124,92,252,0.35)] transition-all disabled:cursor-not-allowed disabled:from-white/[0.06] disabled:to-white/[0.06] disabled:text-white/30 disabled:shadow-none"
               >
-                <div>
-                  {/* Smartphone Aspect Preview Box */}
-                  <div className="aspect-[9/16] w-full max-w-[240px] mx-auto bg-gray-950 rounded-xl overflow-hidden mb-4 relative shadow-inner border border-gray-800 group-hover/card:border-gray-700 transition-colors">
-                    <video
-                      ref={(el) => {
-                        videoRefs.current[index] = el;
-                      }}
-                      src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${clip.download_url}`}
-                      controls
-                      onPlay={() => handleVideoPlay(index)}
-                      className="w-full h-full object-cover"
-                      poster="/api/placeholder/240/426"
-                    />
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-100 group-hover/card:opacity-0 pointer-events-none transition-opacity">
-                      <div className="bg-white/10 p-4 rounded-full backdrop-blur-md border border-white/20">
-                        <Play className="w-6 h-6 text-white fill-white" />
+                <AnimatePresence mode="wait">
+                  {loading ? (
+                    <motion.div
+                      key="loading"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="flex w-full flex-col items-center gap-3 px-2"
+                    >
+                      <div className="flex items-center gap-2.5 text-sm">
+                        <span className="relative flex h-4 w-4">
+                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/40" />
+                          <span className="relative inline-flex h-4 w-4 rounded-full bg-white/80" />
+                        </span>
+                        <span>{step || "Processing..."}</span>
+                        <span className="text-white/50">{progress}%</span>
+                      </div>
+                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+                        <motion.div
+                          className="h-full rounded-full bg-gradient-to-r from-white to-[#35E7D2]"
+                          animate={{ width: `${progress}%` }}
+                          transition={{ duration: 0.4, ease: "easeOut" }}
+                        />
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <motion.span
+                      key="idle"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="flex items-center justify-center gap-2 text-[15px]"
+                    >
+                      <Video className="h-4.5 w-4.5" />
+                      Forge micro-clips
+                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </motion.button>
+            </div>
+
+            <AnimatePresence>
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                  animate={{ opacity: 1, height: "auto", marginTop: 16 }}
+                  exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                  className="flex items-start gap-3 overflow-hidden rounded-xl border border-red-500/20 bg-red-500/[0.07] p-4 text-sm text-red-300"
+                >
+                  <AlertCircle className="mt-0.5 h-4.5 w-4.5 shrink-0" />
+                  <p>{error}</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </motion.section>
+
+        {/* ================= Results ================= */}
+        <AnimatePresence>
+          {clips && clips.length > 0 && (
+            <motion.section
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, ease: "easeOut" }}
+              className="mt-28 w-full"
+            >
+              <div className="mb-10 flex items-center justify-between border-b border-white/10 pb-5">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#7C5CFC]/20 bg-[#7C5CFC]/10 text-[#a996ff]">
+                    <Video className="h-4.5 w-4.5" />
+                  </span>
+                  <h2 className="text-xl font-bold tracking-tight">
+                    Your generated shorts
+                  </h2>
+                </div>
+                <span className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-xs font-medium text-white/50">
+                  {clips.length} clip{clips.length > 1 ? "s" : ""} ready
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {clips.map((clip, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      duration: 0.5,
+                      delay: index * 0.08,
+                      ease: "easeOut",
+                    }}
+                    whileHover={{ y: -6 }}
+                    className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02] p-4 backdrop-blur-xl transition-colors hover:border-[#7C5CFC]/30"
+                  >
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#7C5CFC]/[0.06] to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+
+                    <div className="relative">
+                      <div className="relative mx-auto mb-4 aspect-[9/16] w-full max-w-[240px] overflow-hidden rounded-xl border border-white/10 bg-black shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
+                        <video
+                          ref={(el) => {
+                            videoRefs.current[index] = el;
+                          }}
+                          src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${clip.download_url}`}
+                          controls
+                          onPlay={() => handleVideoPlay(index)}
+                          className="h-full w-full object-cover"
+                        />
+                        <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/30 opacity-100 transition-opacity group-hover:opacity-0">
+                          <div className="rounded-full border border-white/20 bg-white/10 p-3.5 backdrop-blur-md">
+                            <Play className="h-5 w-5 fill-white text-white" />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="px-1">
+                        <div className="mb-2 flex items-center justify-between">
+                          <h3 className="text-sm font-semibold text-white/90">
+                            Clip #{clip.id}
+                          </h3>
+                          <span className="rounded-md bg-gradient-to-r from-[#7C5CFC]/20 to-[#35E7D2]/20 px-2 py-0.5 text-[11px] font-bold text-[#a996ff]">
+                            {clip.score}/10
+                          </span>
+                        </div>
+                        <p className="mb-4 text-xs leading-relaxed text-white/40">
+                          {clip.reason ||
+                            "No description parsed for this segment."}
+                        </p>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="px-1">
-                    <h3 className="font-semibold text-base text-gray-100 line-clamp-1 mb-1 group-hover/card:text-indigo-400 transition-colors">
-                      Clip #{clip.id} • Score {clip.score}/10
-                    </h3>
-                    <p className="text-xs text-gray-400 leading-relaxed mb-4">
-                      {clip.reason ||
-                        "No descriptions parsed for this segment."}
-                    </p>
-                  </div>
-                </div>
-
-                <a
-                  href={`${process.env.NEXT_PUBLIC_BACKEND_URL}${clip.download_url}`}
-                  download
-                  className="flex items-center justify-center gap-2 w-full bg-gray-800 hover:bg-gray-700 text-gray-200 font-medium py-2.5 rounded-xl transition-all text-sm group/btn border border-gray-700/50"
-                >
-                  <Download className="w-4 h-4 transition-transform group-hover/btn:-translate-y-0.5" />
-                  Download Clip
-                </a>
+                    <a
+                      href={`${process.env.NEXT_PUBLIC_BACKEND_URL}${clip.download_url}`}
+                      download
+                      className="relative flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] py-2.5 text-sm font-medium text-white/80 transition-all hover:border-white/20 hover:bg-white/[0.08] hover:text-white"
+                    >
+                      <Download className="h-4 w-4 transition-transform group-hover:-translate-y-0.5" />
+                      Download clip
+                    </a>
+                  </motion.div>
+                ))}
               </div>
-            ))}
-          </div>
-        </section>
-      )}
+            </motion.section>
+          )}
+        </AnimatePresence>
+      </div>
     </main>
   );
 }

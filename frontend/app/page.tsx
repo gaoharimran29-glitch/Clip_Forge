@@ -1,7 +1,14 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Sparkles, Video, Download, Link2, AlertCircle, Play } from "lucide-react";
+import {
+  Sparkles,
+  Video,
+  Download,
+  Link2,
+  AlertCircle,
+  Play,
+} from "lucide-react";
 
 interface Clip {
   id: number;
@@ -18,43 +25,104 @@ export default function Home() {
   const [clips, setClips] = useState<Clip[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
+  const [progress, setProgress] = useState(0);
+  const [step, setStep] = useState("");
 
   const generateClips = async () => {
     if (!url) return;
     setLoading(true);
     setError(null);
     setClips(null);
+    setProgress(0);
+    setStep("Starting...");
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/generate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url }),
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/generate`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url }),
+        },
+      );
 
-      if (!response.ok) throw new Error("Failed to generate clips. Is your backend running?");
-      
+      if (!response.ok) {
+        throw new Error("Failed to start clip generation.");
+      }
+
       const data = await response.json();
-      setClips(data.clips);
+      const jobId = data.job_id;
+
+      if (!jobId) {
+        throw new Error("No job ID returned from backend.");
+      }
+
+      const eventSource = new EventSource(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/stream/${jobId}`,
+      );
+
+      eventSource.onmessage = (event) => {
+        try {
+          const update = JSON.parse(event.data);
+
+          if (update.progress !== undefined) {
+            setProgress(update.progress);
+          }
+
+          if (update.step) {
+            setStep(update.step);
+          }
+
+          if (update.status === "completed") {
+            const result = update.result;
+
+            if (result?.clips) {
+              setClips(result.clips);
+            } else if (result?.clip_generator?.clips) {
+              setClips(result.clip_generator.clips);
+            } else {
+              setError("Job completed but no clips were returned.");
+            }
+
+            setLoading(false);
+            eventSource.close();
+          }
+
+          if (update.status === "failed") {
+            setError(update.error || "Clip generation failed.");
+            setLoading(false);
+            eventSource.close();
+          }
+        } catch (err) {
+          console.error("Failed to parse SSE update:", err);
+          setError("Invalid update received from server.");
+          setLoading(false);
+          eventSource.close();
+        }
+      };
+
+      eventSource.onerror = () => {
+        setError("Lost connection to progress stream.");
+        setLoading(false);
+        eventSource.close();
+      };
     } catch (err: any) {
       console.error(err);
       setError(err.message || "An unexpected error occurred.");
-    } finally {
       setLoading(false);
     }
   };
 
   const handleVideoPlay = (currentIndex: number) => {
-  videoRefs.current.forEach((video, index) => {
-    if (video && index !== currentIndex) {
-      video.pause();
-    }
-  });
-};
+    videoRefs.current.forEach((video, index) => {
+      if (video && index !== currentIndex) {
+        video.pause();
+      }
+    });
+  };
 
   return (
     <main className="min-h-screen bg-[#0B0F19] text-gray-100 selection:bg-indigo-500 selection:text-white antialiased overflow-x-hidden relative flex flex-col items-center p-6 md:p-12">
-      
       {/* Background Decorative Glows */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[500px] pointer-events-none opacity-20 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-indigo-500 via-purple-500 to-transparent blur-3xl -z-10" />
 
@@ -77,7 +145,8 @@ export default function Home() {
             Turn Videos into Viral Shorts
           </h1>
           <p className="text-sm md:text-base text-gray-400 max-w-md mx-auto leading-relaxed">
-            Paste a YouTube link and let our pipeline extract high-retention vertical clips using AI.
+            Paste a YouTube link and let our pipeline extract high-retention
+            vertical clips using AI.
           </p>
         </div>
 
@@ -104,10 +173,18 @@ export default function Home() {
             <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
             <span className="flex items-center justify-center gap-2">
               {loading ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Analyzing Timestamps & Hooks...
-                </>
+                <div className="w-full flex flex-col items-center gap-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>{step || "Processing..."}</span>
+                  </div>
+                  <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-white/80 transition-all duration-300"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                </div>
               ) : (
                 <>
                   <Video className="w-5 h-5" />
@@ -134,7 +211,9 @@ export default function Home() {
               <span className="bg-indigo-500/10 text-indigo-400 p-2 rounded-lg border border-indigo-500/20">
                 <Video className="w-5 h-5" />
               </span>
-              <h2 className="text-xl font-bold tracking-tight text-white">Generated Shorts Workspace</h2>
+              <h2 className="text-xl font-bold tracking-tight text-white">
+                Generated Shorts Workspace
+              </h2>
             </div>
             <span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-gray-900 border border-gray-800 text-gray-400">
               {clips.length} Clips Ready
@@ -169,10 +248,11 @@ export default function Home() {
 
                   <div className="px-1">
                     <h3 className="font-semibold text-base text-gray-100 line-clamp-1 mb-1 group-hover/card:text-indigo-400 transition-colors">
-                    Clip #{clip.id} • Score {clip.score}/10
+                      Clip #{clip.id} • Score {clip.score}/10
                     </h3>
                     <p className="text-xs text-gray-400 leading-relaxed mb-4">
-                      {clip.reason || "No descriptions parsed for this segment."}
+                      {clip.reason ||
+                        "No descriptions parsed for this segment."}
                     </p>
                   </div>
                 </div>

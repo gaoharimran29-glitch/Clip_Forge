@@ -2,7 +2,7 @@ from typing import TypedDict
 
 class GraphState(TypedDict, total=False):
     success: bool
-    id: str
+    job_id: str
     url: str
     title: str
     video_path: str

@@ -19,7 +19,7 @@ class AnalysisResponse(BaseModel):
 async def llm_analyze(state: GraphState) -> dict:
     """LLM layer to analyze and score each transcript chunk."""
     print("LLM Analysis Started... ")
-    analysis_path = Path("outputs/analysis") / f"{state['id']}.json"
+    analysis_path = Path("outputs/analysis") / f"{state['job_id']}.json"
     analysis_path.parent.mkdir(parents=True, exist_ok=True)
 
     GROQ_API_KEY = os.getenv("GROQ_API_KEY")

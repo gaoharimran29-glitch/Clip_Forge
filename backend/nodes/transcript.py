@@ -10,7 +10,7 @@ client = AsyncGroq()
 async def transcribe_audio(state: GraphState , MAX_CHUNK_DURATION: int = 30) -> dict:
     """Generate the transcription for audio of youtube video and save in the json file"""
     print("Transcription Started... ")
-    transcript_path = Path("outputs/transcripts") / f"{state['id']}.json"
+    transcript_path = Path("outputs/transcripts") / f"{state['job_id']}.json"
     transcript_path.parent.mkdir(parents=True, exist_ok=True)
 
     try:

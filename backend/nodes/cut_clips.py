@@ -64,7 +64,7 @@ def clip_generator(state: GraphState) -> dict:
     Reads the analysis file and generates the best clips in parallel.
     """
     print("Clips Cutting Started... ")
-    output_dir = Path("outputs/best_clips") / state["id"]
+    output_dir = Path("outputs/best_clips") / state["job_id"]
     output_dir.mkdir(parents=True, exist_ok=True)
 
     with ThreadPoolExecutor(max_workers=3) as executor:

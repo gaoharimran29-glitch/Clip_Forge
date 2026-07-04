@@ -30,16 +30,14 @@ def youtube_download(state: GraphState) -> dict:
     os.makedirs("outputs/videos", exist_ok=True)
     os.makedirs("outputs/audios", exist_ok=True)
 
-    unique_id = str(uuid.uuid4())
-
     video_opts = {
     "format": "bestvideo[ext=mp4]/bestvideo/best",
-    "outtmpl": f"outputs/videos/{unique_id}.%(ext)s",
+    "outtmpl": f"outputs/videos/{state['job_id']}.%(ext)s",
     }
 
     audio_opts = {
     "format": "bestaudio",
-    "outtmpl": f"outputs/audios/{unique_id}.%(ext)s",
+    "outtmpl": f"outputs/audios/{state['job_id']}.%(ext)s",
     "postprocessors": [
             {
                 "key": "FFmpegExtractAudio",
@@ -59,7 +57,6 @@ def youtube_download(state: GraphState) -> dict:
 
             result = {
                 "success": True,
-                "id": unique_id ,
                 "title": video_info["title"],
                 "video_path": video_path,
                 "audio_path": audio_path,

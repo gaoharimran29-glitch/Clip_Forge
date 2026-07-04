@@ -18,6 +18,7 @@ interface Clip {
   end: number;
   score: number;
   reason: string;
+  caption: string;
   filename: string;
   download_url: string;
 }
@@ -123,6 +124,25 @@ export default function Home() {
         video.pause();
       }
     });
+  };
+
+  const downloadAllClips = async () => {
+    if (!clips) return;
+    for (const clip of clips) {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}${clip.download_url}`,
+      );
+      const blob = await res.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = clip.filename || `clip-${clip.id}.mp4`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(blobUrl);
+      await new Promise((r) => setTimeout(r, 400));
+    }
   };
 
   return (
@@ -324,6 +344,13 @@ export default function Home() {
                 <span className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-xs font-medium text-white/50">
                   {clips.length} clip{clips.length > 1 ? "s" : ""} ready
                 </span>
+                <button
+                  onClick={downloadAllClips}
+                  className="flex items-center gap-2 rounded-full bg-gradient-to-r from-[#7C5CFC] to-[#5B3FE0] px-4 py-1.5 text-xs font-semibold text-white shadow-[0_0_20px_rgba(124,92,252,0.3)] transition-all hover:shadow-[0_0_28px_rgba(124,92,252,0.45)]"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  Download All
+                </button>
               </div>
 
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -359,21 +386,35 @@ export default function Home() {
                           </div>
                         </div>
                       </div>
+                    </div>
 
-                      <div className="px-1">
-                        <div className="mb-2 flex items-center justify-between">
-                          <h3 className="text-sm font-semibold text-white/90">
-                            Clip #{clip.id}
-                          </h3>
-                          <span className="rounded-md bg-gradient-to-r from-[#7C5CFC]/20 to-[#35E7D2]/20 px-2 py-0.5 text-[11px] font-bold text-[#a996ff]">
-                            {clip.score}/10
-                          </span>
-                        </div>
-                        <p className="mb-4 text-xs leading-relaxed text-white/40">
-                          {clip.reason ||
-                            "No description parsed for this segment."}
-                        </p>
+                    <div className="px-1">
+                      <div className="mb-2 flex items-center justify-between">
+                        <h3 className="text-sm font-semibold text-white/90">
+                          Clip #{clip.id}
+                        </h3>
+                        <span className="rounded-md bg-gradient-to-r from-[#7C5CFC]/20 to-[#35E7D2]/20 px-2 py-0.5 text-[11px] font-bold text-[#a996ff]">
+                          {clip.score}/10
+                        </span>
                       </div>
+
+                      <h4 className="mb-1 text-xs font-semibold uppercase tracking-wide text-white/80">
+                        Why this reel will go viral
+                      </h4>
+
+                      <p className="mb-4 text-xs leading-relaxed text-white/40">
+                        {clip.reason ||
+                          "No description parsed for this segment."}
+                      </p>
+
+                      <h4 className="mb-1 text-xs font-semibold uppercase tracking-wide text-white/80">
+                        Best caption for this clip
+                      </h4>
+
+                      <p className="mb-4 text-xs leading-relaxed text-white/40">
+                        {clip.caption ||
+                          "No caption parsed for this segment."}
+                      </p>
                     </div>
 
                     <a

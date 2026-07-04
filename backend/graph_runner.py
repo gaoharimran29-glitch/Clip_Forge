@@ -13,15 +13,17 @@ async def run_graph(job_id: str, url: str):
     final_state = {}
 
     try:
-        async for event in graph.astream({"url": url , "job_id":job_id}, stream_mode="updates", version="v2"):
-            for node_name, node_output in event.items():
+        async for event in graph.astream({"url": url, "job_id": job_id}, stream_mode="updates", version="v2"):
+            data = event.get("data", {})
+            for node_name, node_output in data.items():
                 final_state[node_name] = node_output
 
                 if node_name in NODE_PROGRESS:
                     progress, message = NODE_PROGRESS[node_name]
-                    await update_job(job_id, progress=progress, step=message, node_name=node_name)
+                    await update_job(job_id, progress=progress, step=message,)
 
-        await complete_job(job_id, final_state)
+        clips = final_state.get("clip_generator", {}).get("clips", [])
+        await complete_job(job_id,{"clips": clips, "final_state": final_state,})
 
     except Exception as e:
         await fail_job(job_id, str(e))

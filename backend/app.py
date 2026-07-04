@@ -53,11 +53,12 @@ async def stream_job(job_id: str):
     async def event_generator():
         queue = job["queue"]
 
-        yield f"data: {json.dumps({
-            'status': job['status'],
-            'progress': job['progress'],
-            'step': job['step'],
-        })}\n\n"
+        initial_payload = {
+            "status": job["status"],
+            "progress": job["progress"],
+            "step": job["step"],
+        }
+        yield f"data: {json.dumps(initial_payload)}\n\n"
 
         while True:
             update = await queue.get()

@@ -32,21 +32,29 @@ async def update_job(job_id: str, *, progress: int, step: str, node_name: str | 
         "node_name": node_name,
     })
 
-
 async def complete_job(job_id: str, result):
+    """Called after graph finishes."""
     job = jobs[job_id]
     job["status"] = "completed"
     job["progress"] = 100
     job["step"] = "Completed"
     job["result"] = result
 
+    clips = result.get("clips", [])
+
+    for clip in clips:
+        clip_filename = clip.get("filename")
+        if clip_filename:
+            clip["download_url"] = f"/jobs/{job_id}/clips/{clip_filename}"
+
     await job["queue"].put({
         "status": "completed",
         "progress": 100,
         "step": "Completed",
-        "result": result,
+        "result": {
+            "clips": clips
+        },
     })
-
 
 async def fail_job(job_id: str, error: str):
     job = jobs[job_id]

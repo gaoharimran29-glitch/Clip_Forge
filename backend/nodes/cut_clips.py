@@ -10,9 +10,8 @@ def cut_clip(index, clip, video_path, audio_path, output_dir):
     start = clip["start"]
     end = clip["end"]
     duration = end - start
-
-    output_path = output_dir / f"clip_{index}.mp4"
-    output_path_normalized = "/" + str(output_path).replace("\\", "/")
+    filename = f"clip_{index}.mp4"
+    output_path = output_dir / filename
 
     command = [
         "ffmpeg",
@@ -55,7 +54,7 @@ def cut_clip(index, clip, video_path, audio_path, output_dir):
         "score": clip["score"],
         "reason": clip["reason"],
         "clips_path": str(output_path),
-        "clips_path_normalized": str(output_path_normalized)
+        "filename": filename
     }
 
 @traceable(name="clip_generator")

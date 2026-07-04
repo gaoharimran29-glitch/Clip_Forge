@@ -5,9 +5,11 @@ import asyncio
 
 from fastapi import FastAPI
 from pydantic import BaseModel
-from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+from fastapi import HTTPException
+from fastapi.responses import FileResponse
+from pathlib import Path
 
 from graph_runner import run_graph
 from job_manager import create_job, get_job
@@ -69,5 +71,21 @@ async def stream_job(job_id: str):
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
-os.makedirs("outputs", exist_ok=True)
-app.mount("/outputs", StaticFiles(directory="outputs"), name="outputs")
+@app.get("/jobs/{job_id}/clips/{clip_name}")
+async def get_clip(job_id: str, clip_name: str):
+    job = get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    result = job.get("result") or {}
+    clips = result.get("clips", [])
+
+    allowed_filenames = {clip.get("filename") for clip in clips}
+    if clip_name not in allowed_filenames:
+        raise HTTPException(status_code=404, detail="Clip not found for this job")
+
+    clip_path = Path("outputs") / "best_clips" / job_id / clip_name
+    if not clip_path.exists():
+        raise HTTPException(status_code=404, detail="Clip file missing")
+
+    return FileResponse(str(clip_path), media_type="video/mp4", filename=clip_name)

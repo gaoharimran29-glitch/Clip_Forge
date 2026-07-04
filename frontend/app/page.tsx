@@ -16,7 +16,8 @@ interface Clip {
   end: number;
   score: number;
   reason: string;
-  clips_path_normalized: string;
+  filename: string;
+  download_url: string
 }
 
 export default function Home() {
@@ -233,7 +234,7 @@ export default function Home() {
                       ref={(el) => {
                         videoRefs.current[index] = el;
                       }}
-                      src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${clip.clips_path_normalized}`}
+                      src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${clip.download_url}`}
                       controls
                       onPlay={() => handleVideoPlay(index)}
                       className="w-full h-full object-cover"
@@ -258,7 +259,7 @@ export default function Home() {
                 </div>
 
                 <a
-                  href={`${process.env.NEXT_PUBLIC_BACKEND_URL}${clip.clips_path_normalized}`}
+                  href={`${process.env.NEXT_PUBLIC_BACKEND_URL}${clip.download_url}`}
                   download
                   className="flex items-center justify-center gap-2 w-full bg-gray-800 hover:bg-gray-700 text-gray-200 font-medium py-2.5 rounded-xl transition-all text-sm group/btn border border-gray-700/50"
                 >

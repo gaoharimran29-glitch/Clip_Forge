@@ -13,5 +13,5 @@ class GraphState(TypedDict, total=False):
     analysis_path: str
     clips: list
     clips_path: list
-    clips_path_normalized: list
+    filename: list
     error: str

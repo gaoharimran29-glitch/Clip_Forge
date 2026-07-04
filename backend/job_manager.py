@@ -1,10 +1,11 @@
 import asyncio
 from typing import Any
+import secrets
 
 jobs: dict[str, dict[str, Any]] = {}
 
-
 def create_job(job_id: str):
+    job_token = secrets.token_urlsafe(32)
     jobs[job_id] = {
         "status": "running",
         "progress": 0,
@@ -12,8 +13,10 @@ def create_job(job_id: str):
         "result": None,
         "error": None,
         "queue": asyncio.Queue(),
+        "job_token":job_token
     }
 
+    return job_token
 
 def get_job(job_id: str):
     return jobs.get(job_id)
@@ -41,11 +44,12 @@ async def complete_job(job_id: str, result):
     job["result"] = result
 
     clips = result.get("clips", [])
+    token = job["job_token"]
 
     for clip in clips:
         clip_filename = clip.get("filename")
         if clip_filename:
-            clip["download_url"] = f"/jobs/{job_id}/clips/{clip_filename}"
+            clip["download_url"] = f"/jobs/{job_id}/clips/{clip_filename}?token={token}"
 
     await job["queue"].put({
         "status": "completed",

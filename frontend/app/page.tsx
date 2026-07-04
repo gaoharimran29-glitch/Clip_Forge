@@ -53,13 +53,14 @@ export default function Home() {
 
       const data = await response.json();
       const jobId = data.job_id;
+      const jobToken = data.job_token;
 
       if (!jobId) {
         throw new Error("No job ID returned from backend.");
       }
 
       const eventSource = new EventSource(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/stream/${jobId}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/stream/${jobId}?token=${encodeURIComponent(jobToken)}`,
       );
 
       eventSource.onmessage = (event) => {

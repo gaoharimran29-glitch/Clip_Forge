@@ -1,4 +1,3 @@
-import os
 import json
 import uuid
 import asyncio
@@ -9,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from fastapi import HTTPException
 from fastapi.responses import FileResponse
+from fastapi import Query
 from pathlib import Path
 
 from graph_runner import run_graph
@@ -34,6 +34,10 @@ app.add_middleware(
 class GenerateRequest(BaseModel):
     url: str
 
+def verify_job_access(job: dict, token: str | None):
+    if not token or token != job.get("job_token"):
+        raise HTTPException(status_code=403, detail="Forbidden")
+
 @app.get("/")
 async def home():
     return {"message": "Welcome to ClipForge API"}
@@ -41,16 +45,21 @@ async def home():
 @app.post("/generate")
 async def generate(request: GenerateRequest):
     job_id = str(uuid.uuid4())
-    create_job(job_id)
+    job_token = create_job(job_id)
     asyncio.create_task(run_graph(job_id, request.url))
-    return {"job_id": job_id}
+    return {
+        "job_id": job_id,
+        "job_token": job_token
+        }
 
 @app.get("/stream/{job_id}")
-async def stream_job(job_id: str):
+async def stream_job(job_id: str , token: str = Query(None)):
     job = get_job(job_id)
 
     if not job:
         return {"error": "Invalid job_id"}
+    
+    verify_job_access(job , token)
 
     async def event_generator():
         queue = job["queue"]
@@ -72,11 +81,13 @@ async def stream_job(job_id: str):
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 @app.get("/jobs/{job_id}/clips/{clip_name}")
-async def get_clip(job_id: str, clip_name: str):
+async def get_clip(job_id: str, clip_name: str , token: str = Query(None)):
     job = get_job(job_id)
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
 
+    verify_job_access(job,token)
+    
     result = job.get("result") or {}
     clips = result.get("clips", [])
 

@@ -149,8 +149,23 @@ function ClipCard({
   );
 }
 
+function getYouTubeId(url: string) {
+  const regExp =
+    /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\/\?v=|&v=)([^#&?]*).*/;
+  const match = url.match(regExp);
+  return match && match[2].length === 11 ? match[2] : null;
+}
+
 export default function Home() {
   const [url, setUrl] = useState("");
+  const [ytVideoId, setYtVideoId] = useState<string | null>(null);
+  useEffect(() => {
+    if (url) {
+      setYtVideoId(getYouTubeId(url));
+    } else {
+      setYtVideoId(null);
+    }
+  }, [url]);
   const [loading, setLoading] = useState(false);
   const [clips, setClips] = useState<Clip[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -336,131 +351,158 @@ export default function Home() {
             <span className="text-white/30">.ai</span>
           </div>
         </motion.header>
-
-        {/* ================= Hero ================= */}
-        <motion.section
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease: "easeOut", delay: 0.1 }}
-          className="mb-14 flex flex-col items-center text-center"
-        >
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 py-1.5 text-xs font-medium text-white/60 backdrop-blur-md">
-            <span className="bg-gradient-to-r from-[#7C5CFC] to-[#35E7D2] bg-clip-text text-transparent">
-              AI-powered
-            </span>
-            retention analysis, frame by frame
-          </div>
-
-          <h1 className="text-balance text-5xl font-black leading-[1.02] tracking-tighter sm:text-6xl md:text-7xl lg:text-8xl">
-            Turn long videos
-            <br />
-            into{" "}
-            <span className="relative inline-block">
-              <span className="bg-gradient-to-br from-white via-[#c9c2ff] to-[#7C5CFC] bg-clip-text text-transparent">
-                viral shorts
+          {/* ================= Hero ================= */}
+          <motion.section
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: "easeOut", delay: 0.1 }}
+            className="mb-14 flex flex-col items-center text-center"
+          >
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 py-1.5 text-xs font-medium text-white/60 backdrop-blur-md">
+              <span className="bg-gradient-to-r from-[#7C5CFC] to-[#35E7D2] bg-clip-text text-transparent">
+                AI-powered
               </span>
-              <motion.span
-                className="absolute -bottom-1 left-0 h-[3px] w-full origin-left rounded-full bg-gradient-to-r from-[#7C5CFC] to-[#35E7D2]"
-                initial={{ scaleX: 0 }}
-                animate={{ scaleX: 1 }}
-                transition={{ duration: 0.9, delay: 0.5, ease: "easeOut" }}
-              />
-            </span>
-          </h1>
-
-          <p className="mx-auto mt-7 max-w-xl text-balance text-base leading-relaxed text-white/45 md:text-lg">
-            Paste a link. Our pipeline finds the highest-retention moments and
-            cuts them into vertical, ready-to-post clips — automatically.
-          </p>
-        </motion.section>
-
-        {/* ================= Input card ================= */}
-        <motion.section
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease: "easeOut", delay: 0.2 }}
-          className="relative w-full max-w-xl"
-        >
-          <div className="absolute -inset-px rounded-[28px] bg-gradient-to-b from-white/10 to-transparent opacity-50" />
-          <div className="relative rounded-[28px] border border-white/10 bg-white/[0.03] p-6 shadow-[0_0_60px_rgba(0,0,0,0.5)] backdrop-blur-2xl md:p-8">
-            <div className="space-y-3">
-              <div className="group relative">
-                <div className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-white/30 transition-colors group-focus-within:text-[#7C5CFC]">
-                  <Link2 className="h-4.5 w-4.5" />
-                </div>
-                <input
-                  type="text"
-                  placeholder="Paste a YouTube URL"
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  disabled={loading}
-                  className="w-full rounded-2xl border border-white/10 bg-black/40 py-4 pl-11 pr-4 text-[15px] text-white placeholder-white/25 outline-none transition-all focus:border-[#7C5CFC]/50 focus:bg-black/60 focus:ring-2 focus:ring-[#7C5CFC]/20 disabled:opacity-40"
-                />
-              </div>
-
-              <motion.button
-                onClick={generateClips}
-                disabled={loading || !url}
-                whileTap={{ scale: loading || !url ? 1 : 0.98 }}
-                className="relative w-full overflow-hidden rounded-2xl bg-gradient-to-r from-[#7C5CFC] to-[#5B3FE0] py-4 font-semibold text-white shadow-[0_0_30px_rgba(124,92,252,0.35)] transition-all disabled:cursor-not-allowed disabled:from-white/[0.06] disabled:to-white/[0.06] disabled:text-white/30 disabled:shadow-none"
-              >
-                <AnimatePresence mode="wait">
-                  {loading ? (
-                    <motion.div
-                      key="loading"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="flex w-full flex-col items-center gap-3 px-2"
-                    >
-                      <div className="flex items-center gap-2.5 text-sm">
-                        <span className="relative flex h-4 w-4">
-                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/40" />
-                          <span className="relative inline-flex h-4 w-4 rounded-full bg-white/80" />
-                        </span>
-                        <span>{step || "Processing..."}</span>
-                        <span className="text-white/50">{progress}%</span>
-                      </div>
-                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
-                        <motion.div
-                          className="h-full rounded-full bg-gradient-to-r from-white to-[#35E7D2]"
-                          animate={{ width: `${progress}%` }}
-                          transition={{ duration: 0.4, ease: "easeOut" }}
-                        />
-                      </div>
-                    </motion.div>
-                  ) : (
-                    <motion.span
-                      key="idle"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="flex items-center justify-center gap-2 text-[15px]"
-                    >
-                      <Video className="h-4.5 w-4.5" />
-                      Forge micro-clips
-                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                    </motion.span>
-                  )}
-                </AnimatePresence>
-              </motion.button>
+              retention analysis, frame by frame
             </div>
 
-            <AnimatePresence>
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                  animate={{ opacity: 1, height: "auto", marginTop: 16 }}
-                  exit={{ opacity: 0, height: 0, marginTop: 0 }}
-                  className="flex items-start gap-3 overflow-hidden rounded-xl border border-red-500/20 bg-red-500/[0.07] p-4 text-sm text-red-300"
+            <h1 className="text-balance text-5xl font-black leading-[1.02] tracking-tighter sm:text-6xl md:text-7xl lg:text-8xl">
+              Turn long videos
+              <br />
+              into{" "}
+              <span className="relative inline-block">
+                <span className="bg-gradient-to-br from-white via-[#c9c2ff] to-[#7C5CFC] bg-clip-text text-transparent">
+                  viral shorts
+                </span>
+                <motion.span
+                  className="absolute -bottom-1 left-0 h-[3px] w-full origin-left rounded-full bg-gradient-to-r from-[#7C5CFC] to-[#35E7D2]"
+                  initial={{ scaleX: 0 }}
+                  animate={{ scaleX: 1 }}
+                  transition={{ duration: 0.9, delay: 0.5, ease: "easeOut" }}
+                />
+              </span>
+            </h1>
+
+            <p className="mx-auto mt-7 max-w-xl text-balance text-base leading-relaxed text-white/45 md:text-lg">
+              Paste a link. Our pipeline finds the highest-retention moments and
+              cuts them into vertical, ready-to-post clips — automatically.
+            </p>
+          </motion.section>
+
+          {/* ================= Input card ================= */}
+          <motion.section
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: "easeOut", delay: 0.2 }}
+            className="relative w-full max-w-xl"
+          >
+            <div className="absolute -inset-px rounded-[28px] bg-gradient-to-b from-white/10 to-transparent opacity-50" />
+            <div className="relative rounded-[28px] border border-white/10 bg-white/[0.03] p-6 shadow-[0_0_60px_rgba(0,0,0,0.5)] backdrop-blur-2xl md:p-8">
+              <div className="space-y-3">
+                <div className="group relative">
+                  <div className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-white/30 transition-colors group-focus-within:text-[#7C5CFC]">
+                    <Link2 className="h-4.5 w-4.5" />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Paste a YouTube URL"
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                    disabled={loading}
+                    className="w-full rounded-2xl border border-white/10 bg-black/40 py-4 pl-11 pr-4 text-[15px] text-white placeholder-white/25 outline-none transition-all focus:border-[#7C5CFC]/50 focus:bg-black/60 focus:ring-2 focus:ring-[#7C5CFC]/20 disabled:opacity-40"
+                  />
+                </div>
+
+                <motion.button
+                  onClick={generateClips}
+                  disabled={loading || !url}
+                  whileTap={{ scale: loading || !url ? 1 : 0.98 }}
+                  className="relative w-full overflow-hidden rounded-2xl bg-gradient-to-r from-[#7C5CFC] to-[#5B3FE0] py-4 font-semibold text-white shadow-[0_0_30px_rgba(124,92,252,0.35)] transition-all disabled:cursor-not-allowed disabled:from-white/[0.06] disabled:to-white/[0.06] disabled:text-white/30 disabled:shadow-none"
                 >
-                  <AlertCircle className="mt-0.5 h-4.5 w-4.5 shrink-0" />
-                  <p>{error}</p>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </motion.section>
+                  <AnimatePresence mode="wait">
+                    {loading ? (
+                      <motion.div
+                        key="loading"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="flex w-full flex-col items-center gap-3 px-2"
+                      >
+                        <div className="flex items-center gap-2.5 text-sm">
+                          <span className="relative flex h-4 w-4">
+                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/40" />
+                            <span className="relative inline-flex h-4 w-4 rounded-full bg-white/80" />
+                          </span>
+                          <span>{step || "Processing..."}</span>
+                          <span className="text-white/50">{progress}%</span>
+                        </div>
+                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+                          <motion.div
+                            className="h-full rounded-full bg-gradient-to-r from-white to-[#35E7D2]"
+                            animate={{ width: `${progress}%` }}
+                            transition={{ duration: 0.4, ease: "easeOut" }}
+                          />
+                        </div>
+                      </motion.div>
+                    ) : (
+                      <motion.span
+                        key="idle"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="flex items-center justify-center gap-2 text-[15px]"
+                      >
+                        <Video className="h-4.5 w-4.5" />
+                        Forge micro-clips
+                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </motion.button>
+              </div>
+
+              <AnimatePresence>
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                    animate={{ opacity: 1, height: "auto", marginTop: 16 }}
+                    exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                    className="flex items-start gap-3 overflow-hidden rounded-xl border border-red-500/20 bg-red-500/[0.07] p-4 text-sm text-red-300"
+                  >
+                    <AlertCircle className="mt-0.5 h-4.5 w-4.5 shrink-0" />
+                    <p>{error}</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </motion.section>
+        
+          {/* ================= Source Video Embed ================= */}
+          <AnimatePresence>
+            {ytVideoId && (
+              <motion.section
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+                className="mt-12 w-full max-w-2xl"
+              >
+                <div className="relative rounded-[28px] border border-white/10 bg-white/[0.02] p-4 shadow-[0_0_5px_rgba(0,0,0,0.5)] backdrop-blur-2xl">
+                  <h3 className="mb-3 px-2 text-xs font-semibold uppercase tracking-wider text-white/40">
+                    Source Video
+                  </h3>
+                  <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-white/5 bg-black shadow-2xl">
+                    <iframe
+                      src={`https://www.youtube.com/embed/${ytVideoId}`}
+                      title="YouTube video player"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                      className="absolute inset-0 h-full w-full border-0"
+                    />
+                  </div>
+                </div>
+              </motion.section>
+            )}
+          </AnimatePresence>
 
         {/* ================= Results — Cinematic Reveal ================= */}
         <AnimatePresence>

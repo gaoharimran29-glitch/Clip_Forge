@@ -2,12 +2,14 @@ import json
 import os
 from pathlib import Path
 from pydantic import BaseModel, Field
-from langchain_groq import ChatGroq
 from state import GraphState
 from langsmith import traceable
 from langchain_core.prompts import ChatPromptTemplate
 from model.prompts import SYSTEM_PROMPT , USER_PROMPT
 from model.llm import llm
+from langgraph.types import Command
+from langgraph.graph import END
+from typing import Literal
 
 class ClipScore(BaseModel):
     id: int = Field(description="The index of this chunk from the input transcript list")
@@ -19,7 +21,7 @@ class AnalysisResponse(BaseModel):
     clips: list[ClipScore]
 
 @traceable(name="llm_analyze")
-async def llm_analyze(state: GraphState) -> dict:
+async def llm_analyze(state: GraphState) -> Command[Literal["clip_generator", "__end__"]]:
     """LLM layer to analyze and score each transcript chunk."""
     print("LLM Analysis Started... ")
     analysis_path = Path("outputs/analysis") / f"{state['job_id']}.json"
@@ -53,23 +55,23 @@ async def llm_analyze(state: GraphState) -> dict:
             })
 
         analysis = sorted(analysis, key=lambda x: x["score"], reverse=True)[:3]
-        if not analysis:
-            return {
+        if not analysis:        
+            return Command(update={
                 "success": False,
                 "error": "LLM did not return any valid clips."
-            }
+            } , goto=END)
 
         with open(analysis_path, "w", encoding="utf-8") as file:
             json.dump(analysis, file, indent=4, ensure_ascii=False)
 
-        return {
+        return Command(update={
             "success": True,
             "analysis": analysis,
             "analysis_path": str(analysis_path)
-        }
+        } , goto="clip_generator")
 
     except Exception as e:
-        return {
+        return Command(update={
             "success": False, 
             "error": str(e)
-            }
+            } , goto=END)

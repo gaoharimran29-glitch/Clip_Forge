@@ -3,6 +3,9 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from langsmith import traceable
 from state import GraphState
+from langgraph.types import Command
+from langgraph.graph import END
+from typing import Literal
 
 def cut_clip(index, clip, video_path, audio_path, output_dir):
     """Cuts a single clip and returns its metadata."""
@@ -58,7 +61,7 @@ def cut_clip(index, clip, video_path, audio_path, output_dir):
     }
 
 @traceable(name="clip_generator")
-def clip_generator(state: GraphState) -> dict:
+def clip_generator(state: GraphState) -> Command[Literal["cleanup", "__end__"]]:
     """
     Reads the analysis file and generates the best clips in parallel.
     """
@@ -85,10 +88,13 @@ def clip_generator(state: GraphState) -> dict:
                 result = future.result()
                 clips.append(result)
             
-            return {
+            return Command(update={
                 "success": True,
                 "clips": clips,
-            }
+            }, goto="cleanup")
         
         except Exception as e:
-            return {"success": False , "error": f"Clip Generating error {str(e)}"}
+            return Command(update={
+                "success": False , 
+                "error": f"Clip Generating error {str(e)}"
+            }, goto=END)

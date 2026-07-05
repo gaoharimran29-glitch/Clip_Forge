@@ -1,4 +1,4 @@
-from langgraph.graph import StateGraph, START, END
+from langgraph.graph import StateGraph, START
 from state import GraphState
 from nodes.yt_download import youtube_download
 from nodes.transcript import transcribe_audio
@@ -15,10 +15,5 @@ builder.add_node("clip_generator" , clip_generator)
 builder.add_node("cleanup" , cleanup)
 
 builder.add_edge(START, "youtube_download")
-builder.add_edge("youtube_download", "transcribe_audio")
-builder.add_edge("transcribe_audio" , "llm_analyze")
-builder.add_edge("llm_analyze" , "clip_generator")
-builder.add_edge("clip_generator" , "cleanup")
-builder.add_edge("cleanup" , END)
 
 graph = builder.compile()

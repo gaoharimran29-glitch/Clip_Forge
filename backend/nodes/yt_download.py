@@ -4,6 +4,9 @@ import os
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 from langsmith import traceable
+from langgraph.types import Command
+from langgraph.graph import END
+from typing import Literal
 
 MAX_VIDEO_DURATION = 600 # 10 minutes ( 600 seconds )
 MIN_VIDEO_DURATION = 150 # 150 seconds
@@ -27,7 +30,7 @@ def download_audio(url: str , audio_opts):
     return audio_path
 
 @traceable(name="youtube_download")
-def youtube_download(state: GraphState) -> dict:
+def youtube_download(state: GraphState) -> Command[Literal["transcribe_audio", "__end__"]]:
     """Downloads the youtube video and audio and returns the metadata"""
     os.makedirs("outputs/videos", exist_ok=True)
     os.makedirs("outputs/audios", exist_ok=True)
@@ -62,17 +65,15 @@ def youtube_download(state: GraphState) -> dict:
             video_info, video_path = video_future.result()
             audio_path = audio_future.result()
 
-            result = {
+            return Command(update={
                 "success": True,
                 "title": video_info["title"],
                 "video_path": video_path,
                 "audio_path": audio_path,
-            }
+            } , goto="transcribe_audio")
         
         except Exception as e:
-            result = {
+            return Command(update={
                 "success": False,
                 "error": str(e),
-            }
-
-    return result
+            } , goto=END)

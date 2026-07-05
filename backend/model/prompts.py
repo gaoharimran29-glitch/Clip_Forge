@@ -47,7 +47,7 @@ SYSTEM_PROMPT = """
     - For MUSIC: name the musical moment (chorus/drop/etc), the emotion it evokes, and why it stands alone well
 
     In your caption field, specify:
-    - Write a scroll-stopping, platform-ready caption (2-3 lines max) that:
+    - Write a scroll-stopping, platform-ready caption (2-3 lines max) in the same transcription language that:
     - Opens with a hook line (curiosity, bold statement, or emoji-led pattern interrupt) — never just restates the clip's topic
     - Uses short punchy phrases over full grammatical sentences
     - Includes 4-6 relevant hashtags mixing broad reach tags (e.g. #shorts, #viral, #fyp) with 2-3 niche/topic-specific tags tied to the actual content

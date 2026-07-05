@@ -54,7 +54,8 @@ def cut_clip(index, clip, video_path, audio_path, output_dir):
         "score": clip["score"],
         "reason": clip["reason"],
         "clips_path": str(output_path),
-        "filename": filename
+        "filename": filename,
+        "caption": clip["caption"]
     }
 
 @traceable(name="clip_generator")

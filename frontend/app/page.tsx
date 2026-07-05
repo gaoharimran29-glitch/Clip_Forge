@@ -412,8 +412,7 @@ export default function Home() {
                       </h4>
 
                       <p className="mb-4 text-xs leading-relaxed text-white/40">
-                        {clip.caption ||
-                          "No caption parsed for this segment."}
+                        {clip.caption || "No caption parsed for this segment."}
                       </p>
                     </div>
 

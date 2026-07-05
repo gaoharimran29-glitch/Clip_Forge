@@ -57,3 +57,12 @@ SYSTEM_PROMPT = """
         
     Respond with ONLY the id, score, reason and caption for your chosen clips. Do NOT repeat start, end, or text.
     """
+
+USER_PROMPT = """
+    Below are transcript chunks extracted from a YouTube video, each tagged with an "id".
+    Choose ONLY the best 3 clips.
+    Return ONLY the id, score, reason and caption for each chosen clip.
+    Do NOT return start, end, or text — I already have that data.
+    Transcript:
+    {transcript}
+    """

@@ -5,8 +5,8 @@ from pydantic import BaseModel, Field
 from langchain_groq import ChatGroq
 from state import GraphState
 from langsmith import traceable
-from langchain_core.messages import HumanMessage, SystemMessage
-from model.prompts import SYSTEM_PROMPT
+from langchain_core.prompts import ChatPromptTemplate
+from model.prompts import SYSTEM_PROMPT , USER_PROMPT
 from model.llm import llm
 
 class ClipScore(BaseModel):
@@ -32,16 +32,8 @@ async def llm_analyze(state: GraphState) -> dict:
         {"id": i, **chunk} for i, chunk in enumerate(state["transcript"])
     ]
 
-    transcript_input = f"""
-        Below are transcript chunks extracted from a YouTube video, each tagged with an "id".
-        Choose ONLY the best 3 clips.
-        Return ONLY the id, score, reason and caption for each chosen clip.
-        Do NOT return start, end, or text — I already have that data.
-        Transcript:
-        {json.dumps(indexed_transcript, ensure_ascii=False, indent=2)}
-        """
-
-    messages = [SystemMessage(SYSTEM_PROMPT), HumanMessage(transcript_input)]
+    prompt = ChatPromptTemplate.from_messages([("system", SYSTEM_PROMPT), ("human", USER_PROMPT)])
+    messages = prompt.invoke({"transcript": json.dumps(indexed_transcript, ensure_ascii=False, indent=2)})
 
     try:
         response = await structured_model.ainvoke(messages)

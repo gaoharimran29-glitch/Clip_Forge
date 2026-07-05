@@ -5,6 +5,8 @@ from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 from langsmith import traceable
 
+MAX_VIDEO_DURATION = 10 * 60 # 10 minutes
+
 def download_video(url: str , video_opts):
     """Helper function to download the video"""
     with YoutubeDL(video_opts) as ydl:
@@ -48,6 +50,11 @@ def youtube_download(state: GraphState) -> dict:
 
     with ThreadPoolExecutor(max_workers=2) as executor:
         try:
+            with YoutubeDL({"quiet": True}) as ydl:
+                video_info = ydl.extract_info(state['url'] , download=False)
+                if video_info.get("duration" , 0) > MAX_VIDEO_DURATION:
+                    raise ValueError(f"Videos greater than {MAX_VIDEO_DURATION // 60} are not supported.")
+                
             video_future = executor.submit(download_video, state['url'], video_opts)
             audio_future = executor.submit(download_audio, state['url'], audio_opts)
 

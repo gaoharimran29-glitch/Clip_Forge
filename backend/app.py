@@ -42,6 +42,10 @@ def verify_job_access(job: dict, token: str | None):
 async def home():
     return {"message": "Welcome to ClipForge API"}
 
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+
 @app.post("/generate")
 async def generate(request: GenerateRequest):
     job_id = str(uuid.uuid4())

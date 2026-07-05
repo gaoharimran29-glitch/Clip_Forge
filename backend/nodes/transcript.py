@@ -23,60 +23,60 @@ async def transcribe_audio(state: GraphState , MAX_CHUNK_DURATION: int = 30) -> 
             temperature=0.0
             )
 
-    except Exception as e:
-        return {
-        "success":False ,
-        "error": str(e) , 
-    }
+        transcript = []
 
-    transcript = []
-
-    current_chunk = {
+        current_chunk = {
         "start": None,
         "end": None,
         "text": ""
-    }
+        }
 
-    for segment in transcription.segments:
+        for segment in transcription.segments:
     
-        if current_chunk["start"] is None:
-            current_chunk["start"] = segment["start"]
+            if current_chunk["start"] is None:
+                current_chunk["start"] = segment["start"]
 
-        # Add text
-        current_chunk["text"] += " " + segment["text"].strip()
+            # Add text
+            current_chunk["text"] += " " + segment["text"].strip()
 
-        # Update end time
-        current_chunk["end"] = segment["end"]
+            # Update end time
+            current_chunk["end"] = segment["end"]
 
-        # If chunk reaches 30 seconds, save it
-        if current_chunk["end"] - current_chunk["start"] >= MAX_CHUNK_DURATION:
+            # If chunk reaches 30 seconds, save it
+            if current_chunk["end"] - current_chunk["start"] >= MAX_CHUNK_DURATION:
 
+                transcript.append({
+                    "start": current_chunk["start"],
+                    "end": current_chunk["end"],
+                    "text": current_chunk["text"].strip()
+                })
+
+                # Reset for the next chunk
+                current_chunk = {
+                    "start": None,
+                    "end": None,
+                    "text": ""
+                }
+
+        # Save the final chunk if it contains any text
+        if current_chunk["start"] is not None:
             transcript.append({
                 "start": current_chunk["start"],
                 "end": current_chunk["end"],
                 "text": current_chunk["text"].strip()
             })
+        
+        with open(transcript_path, "w+", encoding="utf-8") as file:
+            json.dump(transcript, file, indent=4, ensure_ascii=False)
 
-            # Reset for the next chunk
-            current_chunk = {
-                "start": None,
-                "end": None,
-                "text": ""
-            }
+        return {
+            "success":True ,
+            "transcript": transcript ,
+            "transcript_path": str(transcript_path)
+        }
 
-    # Save the final chunk if it contains any text
-    if current_chunk["start"] is not None:
-        transcript.append({
-            "start": current_chunk["start"],
-            "end": current_chunk["end"],
-            "text": current_chunk["text"].strip()
-        })
-    
-    with open(transcript_path, "w+", encoding="utf-8") as file:
-        json.dump(transcript, file, indent=4, ensure_ascii=False)
-
-    return {
-        "success":True ,
-        "transcript": transcript ,
-        "transcript_path": str(transcript_path)
+    except Exception as e:
+        return {
+        "success":False ,
+        "error": str(e) , 
     }

@@ -4,10 +4,11 @@ from state import GraphState
 from langsmith import traceable
 from groq import AsyncGroq
 
+MAX_CHUNK_DURATION = 30 # 30s
 client = AsyncGroq()
 
 @traceable(name="transcribe_audio")
-async def transcribe_audio(state: GraphState , MAX_CHUNK_DURATION: int = 30) -> dict:
+async def transcribe_audio(state: GraphState) -> dict:
     """Generate the transcription for audio of youtube video and save in the json file"""
     print("Transcription Started... ")
     transcript_path = Path("outputs/transcripts") / f"{state['job_id']}.json"

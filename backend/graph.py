@@ -10,7 +10,7 @@ builder = StateGraph(GraphState)
 
 builder.add_node("youtube_download", youtube_download)
 builder.add_node("transcribe_audio" , transcribe_audio)
-builder.add_node("llm_analyze" , llm_analyze)
+builder.add_node("llm_analysis" , llm_analyze)
 builder.add_node("clip_generator" , clip_generator)
 builder.add_node("cleanup" , cleanup)
 

@@ -9,10 +9,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 RUN apt-get update && apt-get install -y --no-install-recommends \
       ffmpeg \
       curl \
+      unzip \
       ca-certificates \
     && curl -fsSL https://deno.land/install.sh | sh \
-    && apt-get purge -y curl \
-    && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .

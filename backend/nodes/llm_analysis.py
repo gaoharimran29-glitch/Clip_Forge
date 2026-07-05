@@ -40,6 +40,8 @@ async def llm_analyze(state: GraphState) -> dict:
 
         analysis = []
         for clip_score in response.clips:
+            if not 0 <= clip_score.id < len(state["transcript"]):
+                continue
             original_chunk = state["transcript"][clip_score.id]
             analysis.append({
                 "start": original_chunk["start"],
@@ -51,15 +53,23 @@ async def llm_analyze(state: GraphState) -> dict:
             })
 
         analysis = sorted(analysis, key=lambda x: x["score"], reverse=True)[:3]
+        if not analysis:
+            return {
+                "success": False,
+                "error": "LLM did not return any valid clips."
+            }
+
+        with open(analysis_path, "w", encoding="utf-8") as file:
+            json.dump(analysis, file, indent=4, ensure_ascii=False)
+
+        return {
+            "success": True,
+            "analysis": analysis,
+            "analysis_path": str(analysis_path)
+        }
 
     except Exception as e:
-        return {"success": False, "error": f"LLM or Parsing Error: {str(e)}"}
-
-    with open(analysis_path, "w", encoding="utf-8") as file:
-        json.dump(analysis, file, indent=4, ensure_ascii=False)
-
-    return {
-        "success": True,
-        "analysis": analysis,
-        "analysis_path": str(analysis_path)
-    }
+        return {
+            "success": False, 
+            "error": str(e)
+            }

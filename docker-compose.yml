@@ -10,8 +10,11 @@ services:
       - LANGCHAIN_ENDPOINT=${LANGCHAIN_ENDPOINT}
       - LANGCHAIN_API_KEY=${LANGCHAIN_API_KEY}
       - LANGCHAIN_PROJECT=${LANGCHAIN_PROJECT}
-    volumes:
-      - ./backend:/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
 
   frontend:
@@ -21,9 +24,7 @@ services:
       - "80:3000"
     environment:
       - NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     restart: unless-stopped

@@ -40,13 +40,12 @@ def cut_clip(index, clip, video_path, audio_path, output_dir):
         str(output_path),
     ]
 
-    subprocess.run(
-        command,
-        check=True,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
 
+    subprocess.run(command, check=True, stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+
+    if not output_path.exists():
+        raise RuntimeError("Clip was not created.")
+    
     return {
         "id": index,
         "start": start,
@@ -68,28 +67,28 @@ def clip_generator(state: GraphState) -> dict:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     with ThreadPoolExecutor(max_workers=3) as executor:
+        try:
+            futures = [
+                executor.submit(
+                    cut_clip,
+                    index,
+                    clip,
+                    state["video_path"],
+                    state["audio_path"],
+                    output_dir,
+                )
+                for index, clip in enumerate(state['analysis'], start=1)
+            ]
 
-        futures = [
-            executor.submit(
-                cut_clip,
-                index,
-                clip,
-                state["video_path"],
-                state["audio_path"],
-                output_dir,
-            )
-            for index, clip in enumerate(state['analysis'], start=1)
-        ]
-
-        clips = []
-        for index, future in enumerate(futures, start=1):
-            try:
+            clips = []
+            for future in futures:
                 result = future.result()
                 clips.append(result)
-            except Exception as e:
-                return {"success": False , "error": f"Clip Generating error {str(e)}"}
+            
+            return {
+                "success": True,
+                "clips": clips,
+            }
         
-    return {
-        "success": True,
-        "clips": clips,
-    }
+        except Exception as e:
+            return {"success": False , "error": f"Clip Generating error {str(e)}"}

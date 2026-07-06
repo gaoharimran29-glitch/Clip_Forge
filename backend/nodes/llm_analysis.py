@@ -1,9 +1,7 @@
 import json
-import os
 from pathlib import Path
 from pydantic import BaseModel, Field
 from state import GraphState
-from langsmith import traceable
 from langchain_core.prompts import ChatPromptTemplate
 from model.prompts import SYSTEM_PROMPT , USER_PROMPT
 from model.llm import llm
@@ -21,12 +19,9 @@ class ClipScore(BaseModel):
 class AnalysisResponse(BaseModel):
     clips: list[ClipScore]
 
-@traceable(name="llm_analyze")
 async def llm_analyze(state: GraphState) -> Command[Literal["clip_generator", "__end__"]]:
     """LLM layer to analyze and score each transcript chunk."""
     print("LLM Analysis Started... ")
-    analysis_path = Path("outputs/analysis") / f"{state['job_id']}.json"
-    analysis_path.parent.mkdir(parents=True, exist_ok=True)
 
     structured_model = llm.with_structured_output(AnalysisResponse)
 
@@ -57,13 +52,8 @@ async def llm_analyze(state: GraphState) -> Command[Literal["clip_generator", "_
     analysis = sorted(analysis, key=lambda x: x["score"], reverse=True)[:3]
     if not analysis:        
         raise NodeExecutionError("llm_analyze" , "LLM did not returned any valid clips")
-        
-
-    with open(analysis_path, "w", encoding="utf-8") as file:
-        json.dump(analysis, file, indent=4, ensure_ascii=False)
 
     return Command(update={
         "success": True,
-        "analysis": analysis,
-        "analysis_path": str(analysis_path)
+        "analysis": analysis
     } , goto="clip_generator")

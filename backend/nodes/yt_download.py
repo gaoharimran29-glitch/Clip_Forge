@@ -3,7 +3,6 @@ from state import GraphState
 import os
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
-from langsmith import traceable
 from langgraph.types import Command
 from langgraph.graph import END
 from typing import Literal
@@ -30,7 +29,6 @@ def download_audio(url: str , audio_opts):
 
     return audio_path
 
-@traceable(name="youtube_download")
 def youtube_download(state: GraphState) -> Command[Literal["transcribe_audio", "__end__"]]:
     """Downloads the youtube video and audio and returns the metadata"""
     os.makedirs("outputs/videos", exist_ok=True)

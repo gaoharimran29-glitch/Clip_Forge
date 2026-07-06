@@ -1,7 +1,5 @@
-import json
 from pathlib import Path
 from state import GraphState
-from langsmith import traceable
 from groq import AsyncGroq
 from langgraph.types import Command
 from langgraph.graph import END
@@ -10,12 +8,9 @@ from typing import Literal
 MAX_CHUNK_DURATION = 30 # 30s
 client = AsyncGroq()
 
-@traceable(name="transcribe_audio")
 async def transcribe_audio(state: GraphState) -> Command[Literal["llm_analysis", "__end__"]]:
     """Generate the transcription for audio of youtube video and save in the json file"""
     print("Transcription Started... ")
-    transcript_path = Path("outputs/transcripts") / f"{state['job_id']}.json"
-    transcript_path.parent.mkdir(parents=True, exist_ok=True)
 
     with open(state['audio_path'], "rb") as file:
         transcription = await client.audio.transcriptions.create(
@@ -68,12 +63,8 @@ async def transcribe_audio(state: GraphState) -> Command[Literal["llm_analysis",
             "end": current_chunk["end"],
             "text": current_chunk["text"].strip()
         })
-    
-    with open(transcript_path, "w+", encoding="utf-8") as file:
-        json.dump(transcript, file, indent=4, ensure_ascii=False)
 
     return Command(update={
         "success":True ,
-        "transcript": transcript ,
-        "transcript_path": str(transcript_path)
+        "transcript": transcript
     } , goto="llm_analysis")

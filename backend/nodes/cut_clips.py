@@ -1,7 +1,6 @@
 import subprocess
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from langsmith import traceable
 from state import GraphState
 from langgraph.types import Command
 from langgraph.graph import END
@@ -61,7 +60,6 @@ def cut_clip(index, clip, video_path, audio_path, output_dir):
         "caption": clip["caption"]
     }
 
-@traceable(name="clip_generator")
 def clip_generator(state: GraphState) -> Command[Literal["cleanup", "__end__"]]:
     """
     Reads the analysis file and generates the best clips in parallel.

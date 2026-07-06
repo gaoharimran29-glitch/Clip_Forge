@@ -1,3 +1,4 @@
+FROM mwader/static-ffmpeg:7.1 AS ffmpeg
 FROM python:3.10-slim AS base
 
 WORKDIR /app
@@ -6,13 +7,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PATH="/root/.deno/bin:${PATH}"
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-      ffmpeg \
-      curl \
-      unzip \
-      ca-certificates \
-    && curl -fsSL https://deno.land/install.sh | sh \
-    && rm -rf /var/lib/apt/lists/*
+COPY --from=ffmpeg /ffmpeg /usr/local/bin/ffmpeg
 
 COPY requirements.txt .
 

@@ -29,29 +29,40 @@ export default function Home() {
     <main className="relative min-h-screen w-full overflow-x-hidden bg-[#050507] text-white antialiased selection:bg-[#7C5CFC]/30 selection:text-white">
       <AmbientBackground loading={loading} />
 
-      <div className="relative mx-auto flex w-full max-w-6xl flex-col items-center px-6 pb-32 pt-10 md:px-10">
+      <div className="relative mx-auto w-full max-w-[1400px] px-8 pb-32 pt-10 lg:px-12">
         <SiteHeader />
-        <Hero />
 
-        <UrlInputCard
-          url={url}
-          onUrlChange={setUrl}
-          loading={loading}
-          progress={progress}
-          step={step}
-          error={error}
-          onGenerate={generateClips}
-        />
+        {/* Hero + Video */}
+        <div className="mt-12 grid items-center gap-10 lg:grid-cols-[3fr_2fr]">
+          <div>
+            <Hero />
 
-        <SourceVideoEmbed videoId={ytVideoId} />
+            <UrlInputCard
+              url={url}
+              onUrlChange={setUrl}
+              loading={loading}
+              progress={progress}
+              step={step}
+              error={error}
+              onGenerate={generateClips}
+            />
+          </div>
 
-        <ResultsSection
-          ref={resultsRef}
-          clips={clips}
-          videoRefs={videoRefs}
-          onVideoPlay={handleVideoPlay}
-          onDownloadAll={downloadAllClips}
-        />
+          <div className="flex justify-end">
+            <SourceVideoEmbed videoId={ytVideoId} />
+          </div>
+        </div>
+
+        {/* Results */}
+        <div className="mt-24 flex justify-center">
+          <ResultsSection
+            ref={resultsRef}
+            clips={clips}
+            videoRefs={videoRefs}
+            onVideoPlay={handleVideoPlay}
+            onDownloadAll={downloadAllClips}
+          />
+        </div>
       </div>
     </main>
   );

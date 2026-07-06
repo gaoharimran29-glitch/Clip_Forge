@@ -1,6 +1,7 @@
 import json
 import uuid
 import asyncio
+import os
 
 from fastapi import FastAPI
 from pydantic import BaseModel
@@ -16,16 +17,14 @@ from job_manager import create_job, get_job
 
 app = FastAPI(title="ClipForge API", version="1.0.0")
 
-origins = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost",
-    "http://127.0.0.1",
-]
+CORS_ORIGIN = os.getenv("CORS_ORIGIN", "").split(",")
+
+if not CORS_ORIGIN:
+    raise RuntimeError("CORS_ORIGIN environment variable is not set.")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=[CORS_ORIGIN],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

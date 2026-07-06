@@ -10,17 +10,10 @@ def cleanup(state: GraphState) -> Command[Literal["__end__"]]:
     """Delete temporary files."""
     print("Removing Temporary files...")
 
-    try:
-        for path in [state["audio_path"], state["video_path"], state["transcript_path"]]:
-            Path(path).unlink(missing_ok=True)
-            print(f"Path deleted: {str(path)}")
+    for path in [state["audio_path"], state["video_path"], state["transcript_path"]]:
+        Path(path).unlink(missing_ok=True)
+        print(f"Path deleted: {str(path)}")
 
-        return Command(update={
-            "success": True,
-        }, goto=END)
-
-    except Exception as e:
-        return Command(update={
-            "success": False,
-            "error": str(e),
-        }, goto=END)
+    return Command(update={
+        "success": True,
+    }, goto=END)

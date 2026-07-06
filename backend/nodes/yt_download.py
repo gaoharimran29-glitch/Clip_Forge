@@ -7,6 +7,7 @@ from langsmith import traceable
 from langgraph.types import Command
 from langgraph.graph import END
 from typing import Literal
+from exceptions import NodeExecutionError
 
 MAX_VIDEO_DURATION = 600 # 10 minutes ( 600 seconds )
 MIN_VIDEO_DURATION = 150 # 150 seconds
@@ -53,27 +54,20 @@ def youtube_download(state: GraphState) -> Command[Literal["transcribe_audio", "
     }
 
     with ThreadPoolExecutor(max_workers=2) as executor:
-        try:
-            with YoutubeDL({"quiet": True}) as ydl:
-                video_info = ydl.extract_info(state['url'] , download=False)
-                if video_info.get("duration" , 0) > MAX_VIDEO_DURATION or video_info.get("duration" , 0) < MIN_VIDEO_DURATION:
-                    raise ValueError(f"Videos greater than {MAX_VIDEO_DURATION // 60} and less than {MIN_VIDEO_DURATION // 60} are not supported.")
+        with YoutubeDL({"quiet": True}) as ydl:
+            video_info = ydl.extract_info(state['url'] , download=False)
+            if video_info.get("duration" , 0) > MAX_VIDEO_DURATION or video_info.get("duration" , 0) < MIN_VIDEO_DURATION:
+                raise NodeExecutionError("youtube_download" , f"Videos greater than {MAX_VIDEO_DURATION // 60} and less than {MIN_VIDEO_DURATION // 60} are not supported.")
                 
-            video_future = executor.submit(download_video, state['url'], video_opts)
-            audio_future = executor.submit(download_audio, state['url'], audio_opts)
+        video_future = executor.submit(download_video, state['url'], video_opts)
+        audio_future = executor.submit(download_audio, state['url'], audio_opts)
 
-            video_info, video_path = video_future.result()
-            audio_path = audio_future.result()
+        video_info, video_path = video_future.result()
+        audio_path = audio_future.result()
 
-            return Command(update={
-                "success": True,
-                "title": video_info["title"],
-                "video_path": video_path,
-                "audio_path": audio_path,
-            } , goto="transcribe_audio")
-        
-        except Exception as e:
-            return Command(update={
-                "success": False,
-                "error": str(e),
-            } , goto=END)
+        return Command(update={
+            "success": True,
+            "title": video_info["title"],
+            "video_path": video_path,
+            "audio_path": audio_path,
+        } , goto="transcribe_audio")

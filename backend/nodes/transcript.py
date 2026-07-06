@@ -17,71 +17,63 @@ async def transcribe_audio(state: GraphState) -> Command[Literal["llm_analysis",
     transcript_path = Path("outputs/transcripts") / f"{state['job_id']}.json"
     transcript_path.parent.mkdir(parents=True, exist_ok=True)
 
-    try:
-        with open(state['audio_path'], "rb") as file:
-            transcription = await client.audio.transcriptions.create(
-            file=file,
-            model="whisper-large-v3-turbo",
-            response_format="verbose_json",
-            timestamp_granularities = ["segment"],
-            temperature=0.0
-            )
+    with open(state['audio_path'], "rb") as file:
+        transcription = await client.audio.transcriptions.create(
+        file=file,
+        model="whisper-large-v3-turbo",
+        response_format="verbose_json",
+        timestamp_granularities = ["segment"],
+        temperature=0.0
+        )
 
-        transcript = []
+    transcript = []
 
-        current_chunk = {
-        "start": None,
-        "end": None,
-        "text": ""
-        }
+    current_chunk = {
+    "start": None,
+    "end": None,
+    "text": ""
+    }
 
-        for segment in transcription.segments:
-    
-            if current_chunk["start"] is None:
-                current_chunk["start"] = segment["start"]
+    for segment in transcription.segments:
 
-            # Add text
-            current_chunk["text"] += " " + segment["text"].strip()
+        if current_chunk["start"] is None:
+            current_chunk["start"] = segment["start"]
 
-            # Update end time
-            current_chunk["end"] = segment["end"]
+        # Add text
+        current_chunk["text"] += " " + segment["text"].strip()
 
-            # If chunk reaches 30 seconds, save it
-            if current_chunk["end"] - current_chunk["start"] >= MAX_CHUNK_DURATION:
+        # Update end time
+        current_chunk["end"] = segment["end"]
 
-                transcript.append({
-                    "start": current_chunk["start"],
-                    "end": current_chunk["end"],
-                    "text": current_chunk["text"].strip()
-                })
+        # If chunk reaches 30 seconds, save it
+        if current_chunk["end"] - current_chunk["start"] >= MAX_CHUNK_DURATION:
 
-                # Reset for the next chunk
-                current_chunk = {
-                    "start": None,
-                    "end": None,
-                    "text": ""
-                }
-
-        # Save the final chunk if it contains any text
-        if current_chunk["start"] is not None:
             transcript.append({
                 "start": current_chunk["start"],
                 "end": current_chunk["end"],
                 "text": current_chunk["text"].strip()
             })
-        
-        with open(transcript_path, "w+", encoding="utf-8") as file:
-            json.dump(transcript, file, indent=4, ensure_ascii=False)
+
+            # Reset for the next chunk
+            current_chunk = {
+                "start": None,
+                "end": None,
+                "text": ""
+            }
+
+    # Save the final chunk if it contains any text
+    if current_chunk["start"] is not None:
+        transcript.append({
+            "start": current_chunk["start"],
+            "end": current_chunk["end"],
+            "text": current_chunk["text"].strip()
+        })
     
-        return Command(update={
-            "success":True ,
-            "transcript": transcript ,
-            "transcript_path": str(transcript_path)
-        } , goto="llm_analysis")
+    with open(transcript_path, "w+", encoding="utf-8") as file:
+        json.dump(transcript, file, indent=4, ensure_ascii=False)
 
-    except Exception as e:
-
-        return Command(update={
-        "success":False ,
-        "error": str(e) , 
-    } , goto=END)
+    return Command(update={
+        "success":True ,
+        "transcript": transcript ,
+        "transcript_path": str(transcript_path)
+    } , goto="llm_analysis")

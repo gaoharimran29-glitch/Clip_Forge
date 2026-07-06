@@ -6,6 +6,7 @@ from state import GraphState
 from langgraph.types import Command
 from langgraph.graph import END
 from typing import Literal
+from exceptions import NodeExecutionError
 
 def cut_clip(index, clip, video_path, audio_path, output_dir):
     """Cuts a single clip and returns its metadata."""
@@ -47,7 +48,7 @@ def cut_clip(index, clip, video_path, audio_path, output_dir):
     subprocess.run(command, check=True, stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
 
     if not output_path.exists():
-        raise RuntimeError("Clip was not created.")
+        raise NodeExecutionError("clip_generator" , "Clips not generated")
     
     return {
         "id": index,
@@ -70,31 +71,24 @@ def clip_generator(state: GraphState) -> Command[Literal["cleanup", "__end__"]]:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     with ThreadPoolExecutor(max_workers=3) as executor:
-        try:
-            futures = [
-                executor.submit(
-                    cut_clip,
-                    index,
-                    clip,
-                    state["video_path"],
-                    state["audio_path"],
-                    output_dir,
-                )
-                for index, clip in enumerate(state['analysis'], start=1)
-            ]
+        futures = [
+            executor.submit(
+                cut_clip,
+                index,
+                clip,
+                state["video_path"],
+                state["audio_path"],
+                output_dir,
+            )
+            for index, clip in enumerate(state['analysis'], start=1)
+        ]
 
-            clips = []
-            for future in futures:
-                result = future.result()
-                clips.append(result)
-            
-            return Command(update={
-                "success": True,
-                "clips": clips,
-            }, goto="cleanup")
+        clips = []
+        for future in futures:
+            result = future.result()
+            clips.append(result)
         
-        except Exception as e:
-            return Command(update={
-                "success": False , 
-                "error": f"Clip Generating error {str(e)}"
-            }, goto=END)
+        return Command(update={
+            "success": True,
+            "clips": clips,
+        }, goto="cleanup")

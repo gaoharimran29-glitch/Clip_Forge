@@ -10,6 +10,7 @@ from model.llm import llm
 from langgraph.types import Command
 from langgraph.graph import END
 from typing import Literal
+from exceptions import NodeExecutionError
 
 class ClipScore(BaseModel):
     id: int = Field(description="The index of this chunk from the input transcript list")
@@ -37,41 +38,32 @@ async def llm_analyze(state: GraphState) -> Command[Literal["clip_generator", "_
     prompt = ChatPromptTemplate.from_messages([("system", SYSTEM_PROMPT), ("human", USER_PROMPT)])
     messages = prompt.invoke({"transcript": json.dumps(indexed_transcript, ensure_ascii=False, indent=2)})
 
-    try:
-        response = await structured_model.ainvoke(messages)
+    response = await structured_model.ainvoke(messages)
 
-        analysis = []
-        for clip_score in response.clips:
-            if not 0 <= clip_score.id < len(state["transcript"]):
-                continue
-            original_chunk = state["transcript"][clip_score.id]
-            analysis.append({
-                "start": original_chunk["start"],
-                "end": original_chunk["end"],
-                "text": original_chunk["text"],
-                "score": clip_score.score,
-                "reason": clip_score.reason,
-                "caption": clip_score.caption
-            })
+    analysis = []
+    for clip_score in response.clips:
+        if not 0 <= clip_score.id < len(state["transcript"]):
+            continue
+        original_chunk = state["transcript"][clip_score.id]
+        analysis.append({
+            "start": original_chunk["start"],
+            "end": original_chunk["end"],
+            "text": original_chunk["text"],
+            "score": clip_score.score,
+            "reason": clip_score.reason,
+            "caption": clip_score.caption
+        })
 
-        analysis = sorted(analysis, key=lambda x: x["score"], reverse=True)[:3]
-        if not analysis:        
-            return Command(update={
-                "success": False,
-                "error": "LLM did not return any valid clips."
-            } , goto=END)
+    analysis = sorted(analysis, key=lambda x: x["score"], reverse=True)[:3]
+    if not analysis:        
+        raise NodeExecutionError("llm_analyze" , "LLM did not returned any valid clips")
+        
 
-        with open(analysis_path, "w", encoding="utf-8") as file:
-            json.dump(analysis, file, indent=4, ensure_ascii=False)
+    with open(analysis_path, "w", encoding="utf-8") as file:
+        json.dump(analysis, file, indent=4, ensure_ascii=False)
 
-        return Command(update={
-            "success": True,
-            "analysis": analysis,
-            "analysis_path": str(analysis_path)
-        } , goto="clip_generator")
-
-    except Exception as e:
-        return Command(update={
-            "success": False, 
-            "error": str(e)
-            } , goto=END)
+    return Command(update={
+        "success": True,
+        "analysis": analysis,
+        "analysis_path": str(analysis_path)
+    } , goto="clip_generator")

@@ -1,4 +1,5 @@
 "use client";
+export const dynamic = "force-dynamic";
 
 import { AmbientBackground } from "@/components/AmbientBackground";
 import { Hero } from "@/components/Hero";

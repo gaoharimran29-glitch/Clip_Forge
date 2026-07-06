@@ -60,7 +60,7 @@ async def complete_job(job_id: str, result):
         },
     })
 
-async def fail_job(job_id: str, error: str):
+async def fail_job(job_id: str, error: str , node: str = "unknown"):
     job = jobs[job_id]
     job["status"] = "failed"
     job["error"] = error

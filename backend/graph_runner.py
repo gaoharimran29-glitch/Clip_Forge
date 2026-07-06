@@ -30,4 +30,4 @@ async def run_graph(job_id: str, url: str):
         await fail_job(job_id, error=e.message , node=e.node)
 
     except Exception as e:
-        await fail_job(job_id, error=e.message)
+        await fail_job(job_id, error=str(e))

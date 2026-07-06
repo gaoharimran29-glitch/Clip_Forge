@@ -1,5 +1,6 @@
 from graph import graph
 from job_manager import update_job, complete_job, fail_job
+from exceptions import NodeExecutionError
 
 NODE_PROGRESS = {
     "youtube_download": (20, "Downloading YouTube video..."),
@@ -23,7 +24,10 @@ async def run_graph(job_id: str, url: str):
                     await update_job(job_id, progress=progress, step=message,)
 
         clips = final_state.get("clip_generator", {}).get("clips", [])
-        await complete_job(job_id,{"clips": clips, "final_state": final_state,})
+        await complete_job(job_id, {"clips": clips, "final_state": final_state})
+
+    except NodeExecutionError as e:
+        await fail_job(job_id, error=e.message , node=e.node)
 
     except Exception as e:
-        await fail_job(job_id, str(e))
+        await fail_job(job_id, error=e.message)

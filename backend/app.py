@@ -17,14 +17,16 @@ from job_manager import create_job, get_job
 
 app = FastAPI(title="ClipForge API", version="1.0.0")
 
-CORS_ORIGIN = os.getenv("CORS_ORIGIN", "").split(",")
+raw_cors = os.getenv("CORS_ORIGIN")
 
-if not CORS_ORIGIN:
+if not raw_cors:
     raise RuntimeError("CORS_ORIGIN environment variable is not set.")
+
+CORS_ORIGIN = raw_cors.split(",")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[CORS_ORIGIN],
+    allow_origins=CORS_ORIGIN,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -8,29 +8,51 @@ Transform long-form YouTube videos into **high-retention, viral-ready vertical s
 
 <p align="center">
 
-[![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-Visit-success?style=for-the-badge)](https://gaoharimranx.duckdns.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.12+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-14-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)](https://nextjs.org/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 [![GitHub Actions](https://img.shields.io/badge/CI/CD-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/features/actions)
 
 </p>
 
-## **https://gaoharimranx.duckdns.org/**
+</div>
 
 ---
 
-ClipForge automates the entire content repurposing workflow—from downloading YouTube videos to producing **ready-to-post short-form clips**.
+ClipForge automates the entire content repurposing workflow — from downloading YouTube videos to producing **ready-to-post short-form clips**.
 
 The complete AI pipeline:
 
 🎥 Download YouTube Videos → 🎙️ Generate Ultra-fast Transcripts → 🧠 Analyze Viral Potential using LLMs → ✂️ Extract High-Retention Segments → 💬 Burn Dynamic Captions → ⚡ Stream Live Progress Updates → 📱 Export Vertical Shorts
 
-</div>
+---
+
+## 📑 Table of Contents
+
+- [Features](#-features)
+- [System Architecture](#️-system-architecture)
+- [Workflow Graph](#-workflow-graph)
+- [Demo](#-demo)
+- [Screenshots](#-screenshots)
+- [Tech Stack](#️-tech-stack)
+- [Project Structure](#-project-structure)
+- [Prerequisites](#-prerequisites)
+- [Getting Started](#-getting-started)
+- [Environment Variables](#-environment-variables)
+- [Running with Docker](#-running-with-docker)
+- [Local Development](#-local-development)
+- [API Processing Flow](#-api-processing-flow)
+- [Known Limitations](#️-known-limitations)
+- [Roadmap](#-roadmap)
+- [Contributing](#-contributing)
+- [License](#-license)
+- [Support](#-support)
+- [Author](#-author)
 
 ---
 
-# ✨ Features
+## ✨ Features
 
 - 🎥 Download YouTube videos using **yt-dlp**
 - 🎙️ Ultra-fast speech transcription
@@ -41,12 +63,10 @@ The complete AI pipeline:
 - 🚀 Parallel clip generation
 - 📱 Beautiful responsive Next.js frontend
 - 🐳 Fully Dockerized
-- 🔄 GitHub Actions CI/CD pipeline
-- ☁️ Production deployment on AWS EC2
 
 ---
 
-# 🏗️ System Architecture
+## 🏗️ System Architecture
 
 ```text
                  +------------------+
@@ -69,9 +89,10 @@ The complete AI pipeline:
                            |
                     Generated Shorts
 ```
+
 ---
 
-# 🔄 Workflow Graph
+## 🔄 Workflow Graph
 
 <p align="center">
   <img src="images/graph.png">
@@ -79,124 +100,156 @@ The complete AI pipeline:
 
 ---
 
-# 🎥 Demo
+## 🎥 Demo
 
-## Live Application
+### Application Walkthrough
 
-🚀 **https://gaoharimranx.duckdns.org/**
-
-> Paste a YouTube URL and let ClipForge automatically generate viral-ready clips.
+<p align="center">
+  <video src="images/demo.mp4" controls width="100%"></video>
+</p>
 
 ---
 
-## Application Walkthrough
+## 📸 Screenshots
 
-> *(Add a GIF or YouTube demo here later)*
+### Home Page
+
+<p align="center">
+  <img src="images/home.png">
+</p>
+
+### Results
+
+<p align="center">
+  <img src="images/results.png">
+</p>
+
+---
+
+## ⚙️ Tech Stack
+
+| Layer | Technologies |
+|---|---|
+| **Frontend** | Next.js, React, TypeScript, Tailwind CSS, Framer Motion |
+| **Backend** | FastAPI, LangGraph, LangChain, Groq LLM, Pydantic, FFmpeg, yt-dlp |
+| **DevOps** | Docker, Docker Compose |
+
+---
+
+## 📂 Project Structure
 
 ```text
-images/demo.gif
+Clip_forge
+├─ backend
+│  ├─ .dockerignore
+│  ├─ app.py
+│  ├─ Dockerfile
+│  ├─ exceptions.py
+│  ├─ graph.py
+│  ├─ graph_runner.py
+│  ├─ job_manager.py
+│  ├─ model
+│  │  ├─ llm.py
+│  │  └─ prompts.py
+│  ├─ nodes
+│  │  ├─ cleanup_disk.py
+│  │  ├─ cut_clips.py
+│  │  ├─ llm_analysis.py
+│  │  ├─ transcript.py
+│  │  ├─ yt_download.py
+│  │  └─ __init__.py
+│  ├─ requirements.txt
+│  └─ state.py
+├─ docker-compose.yml
+├─ frontend
+│  ├─ .dockerignore
+│  ├─ app
+│  │  ├─ globals.css
+│  │  ├─ layout.tsx
+│  │  └─ page.tsx
+│  ├─ components
+│  │  ├─ AmbientBackground.tsx
+│  │  ├─ ClipCard.tsx
+│  │  ├─ Hero.tsx
+│  │  ├─ ResultsSection.tsx
+│  │  ├─ SiteHeader.tsx
+│  │  ├─ SourceVideoEmbed.tsx
+│  │  └─ UrlInputCard.tsx
+│  ├─ Dockerfile
+│  ├─ eslint.config.mjs
+│  ├─ hooks
+│  │  └─ useClipGeneration.ts
+│  ├─ lib
+│  │  ├─ backend.ts
+│  │  └─ youtube.ts
+│  ├─ next.config.ts
+│  ├─ package-lock.json
+│  ├─ package.json
+│  ├─ public
+│  │  ├─ file.svg
+│  │  ├─ globe.svg
+│  │  ├─ next.svg
+│  │  ├─ vercel.svg
+│  │  └─ window.svg
+│  ├─ tsconfig.json
+│  └─ types
+│     ├─ clip.ts
+│     └─ job.ts
+├─ images
+│  ├─ demo.mp4
+│  ├─ graph.png
+│  ├─ home.png
+│  └─ results.png
+├─ LICENSE
+└─ README.md
+
 ```
 
 ---
 
-# 📸 Screenshots
+## ✅ Prerequisites
 
-## Home Page
+Before running ClipForge locally, make sure you have:
 
-```text
-images/home.png
-```
-
-## Results
-
-```text
-images/results.png
-```
+- **Python** 3.12+
+- **Node.js** 18+ and npm
+- **FFmpeg** installed and available on your `PATH`
+- **Docker & Docker Compose** (if running via containers)
+- A **Groq API key** (or your preferred LLM provider key) for the analysis step
 
 ---
 
-# ⚙️ Tech Stack
+## Steps to run:
 
-## Frontend
-
-- Next.js
-- React
-- TypeScript
-- Tailwind CSS
-- Framer Motion
-
-## Backend
-
-- FastAPI
-- LangGraph
-- LangChain
-- Groq LLM
-- Pydantic
-- FFmpeg
-- yt-dlp
-
-## DevOps & Deployment
-
-- Docker
-- Docker Compose
-- GitHub Actions
-- AWS EC2
-
----
-
-# 📂 Project Structure
-
-```text
-ClipForge/
-│
-├── backend/
-│   ├── nodes/
-│   ├── outputs/
-│   ├── app.py
-│   ├── graph.py
-│   ├── state.py
-│   └── ...
-│
-├── frontend/
-│   ├── app/
-│   ├── components/
-│   ├── public/
-│   └── ...
-│
-├── docker-compose.yml
-├── .env.example
-├── README.md
-└── .github/
-    └── workflows/
-```
-
----
-
-# 🚀 Getting Started
-
-## Clone the Repository
+Clone the repository:
 
 ```bash
-git clone https://github.com/gaoharimran29-glitch/Clip_forge.git
+git clone https://github.com/gaoharimran29-glitch/Clip_Forge.git
 
-cd Clip_forge
+cd Clip_Forge
 ```
 
 ---
 
-## Environment Variables
+## 🔐 Environment Variables
 
-Create a `.env` file in the project root using the provided `.env.example`.
+Create a `.env` file in the project root using the provided `.env.example` as a template.
+
+| Variable | Description |
+|---|---|
+| `GROQ_API_KEY` | API key used for LLM-based viral moment analysis |
+| `NEXT_PUBLIC_API_URL` | URL the frontend uses to reach the FastAPI backend |
+| `CORS_ORIGIN` | CORS URL So backend can communicate with frontend |
 
 ---
 
-# 🐳 Running with Docker
+## 🐳 Running with Docker
 
 ```bash
 docker compose up --build
 ```
 
-Application will be available at
+The application will be available at:
 
 ```text
 http://localhost
@@ -204,9 +257,9 @@ http://localhost
 
 ---
 
-# 💻 Local Development
+## 💻 Local Development
 
-## Backend
+### Backend
 
 ```bash
 cd backend
@@ -216,9 +269,7 @@ pip install -r requirements.txt
 uvicorn app:app --reload
 ```
 
----
-
-## Frontend
+### Frontend
 
 ```bash
 cd frontend
@@ -230,7 +281,7 @@ npm run dev
 
 ---
 
-# 📡 API Processing Flow
+## 📡 API Processing Flow
 
 ```text
 POST /generate
@@ -250,42 +301,19 @@ POST /generate
 
 ---
 
-# 🚀 Deployment
+## ⚠️ Known Limitations
 
-ClipForge is production-ready and supports deployment with:
+- **YouTube download reliability**: `yt-dlp` occasionally hits YouTube's bot-detection checks, particularly when running from datacenter/cloud IPs (e.g. AWS, GCP). If you hit a `Sign in to confirm you're not a bot` error, keeping `yt-dlp` updated (`pip install -U yt-dlp`) and supplying a valid cookies file are the most reliable fixes for local/dev use.
+- Clip quality depends on transcription accuracy and the underlying LLM's judgment of "viral" moments — results may vary by content type.
 
-- Docker
-- Docker Compose
-- AWS EC2
-- GitHub Actions CI/CD
-
-Deployment workflow:
-
-```text
-Push to main
-      │
-      ▼
-GitHub Actions
-      │
-      ▼
-SSH into EC2
-      │
-      ▼
-git fetch origin
-      │
-      ▼
-git reset --hard origin/main
-      │
-      ▼
-docker compose up --build -d
-      │
-      ▼
-Application Updated 🚀
-```
+---
+## 🗺️ Roadmap
+ 
+- [ ] **Browser extension for reliable video capture** — move video acquisition client-side (via a companion extension) so the pipeline no longer depends on server-side `yt-dlp` calls hitting YouTube's bot detection from a datacenter IPs
 
 ---
 
-# 🤝 Contributing
+## 🤝 Contributing
 
 Contributions, feature requests, and bug reports are welcome!
 
@@ -297,13 +325,13 @@ Contributions, feature requests, and bug reports are welcome!
 
 ---
 
-# 📄 License
+## 📄 License
 
 This project is licensed under the **MIT License**.
 
 ---
 
-# 🌟 Support
+## 🌟 Support
 
 If you found ClipForge useful, please consider giving this repository a **⭐ Star**.
 
@@ -316,5 +344,3 @@ It helps others discover the project and motivates future development.
 Built by **Gaohar Imran**
 - GitHub: [@gaoharimran29-glitch](https://github.com/gaoharimran29-glitch)
 - LinkedIn: [Gaohar Imran](https://www.linkedin.com/in/gaohar-imran-5a4063379/)
-
----

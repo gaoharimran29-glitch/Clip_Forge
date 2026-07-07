@@ -22,9 +22,10 @@ jobs:
           script: |
             set -e
 
-            # 1. Smart Clone: Check if the project folder exists. If not, clone it!
-            if [ ! -d "~/Clip_Forge" ]; then
-              echo "Project folder not found. Cloning repository for the first time..."
+            # 1. Smart Directory Check
+            if [ ! -d "~/Clip_Forge/.git" ]; then
+              echo "Repository not fully initialized. Cleaning up and cloning fresh..."
+              rm -rf ~/Clip_Forge
               git clone https://github.com/${{ github.repository }}.git ~/Clip_Forge
             fi
 

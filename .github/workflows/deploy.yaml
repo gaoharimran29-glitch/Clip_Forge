@@ -44,7 +44,8 @@ jobs:
 
             echo "4. Building and launching Docker containers..."
             docker compose down
-            docker compose up -d --build --no-cache
+            docker compose build --no-cache
+            docker compose up -d
 
             echo "5. Cleaning up old unused Docker assets..."
             docker image prune -f

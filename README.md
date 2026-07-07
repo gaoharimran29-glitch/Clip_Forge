@@ -104,9 +104,11 @@ The complete AI pipeline:
 
 ### Application Walkthrough
 
-<p align="center">
-  <video src="images/demo.mp4" controls width="100%"></video>
-</p>
+
+
+https://github.com/user-attachments/assets/f15b3ab4-9c39-4d05-9dc6-9923351e0000
+
+
 
 ---
 
